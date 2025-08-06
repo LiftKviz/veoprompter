@@ -1,5 +1,121 @@
 # Veo 3 Prompt Assistant - Changelog
 
+## Version 1.10.0 - Flow Integration & Enhanced System Prompts (2025-08-06)
+
+### 🚀 Major Features
+
+#### Google Flow Integration
+- **NEW**: Direct integration with Google Labs Flow (formerly Veo 3)
+- **NEW**: ✨ "Improve Prompt" button injected into Flow's textarea interface
+- **NEW**: 🔄 "Change Prompt" button for user-directed modifications with modal input
+- **NEW**: Real-time prompt enhancement without leaving Flow workflow
+- **NEW**: Automatic detection of Flow's textarea element (`#PINHOLE_TEXT_AREA_ELEMENT_ID`)
+- **NEW**: Professional button styling with gradient backgrounds and hover effects
+
+#### Enhanced System Prompt Framework
+- **UPGRADED**: Unified system prompt across all extension features (popup and Flow buttons)
+- **ADDED**: CAMERA framework as 6th element in SSASA methodology
+- **ENHANCED**: Camera movement specifications (dolly, handheld, aerial, close-up, tracking shot)
+- **STANDARDIZED**: JSON output format requirement for all AI responses
+- **IMPROVED**: Consistent prompt engineering across popup modifications and Flow integrations
+
+#### Authentication & API Key Management
+- **FIXED**: Google OAuth client ID mismatch resolution
+- **ENHANCED**: Automatic tier upgrade when API keys are saved
+- **IMPROVED**: Cross-context API key decryption in service workers
+- **SECURED**: Military-grade AES-GCM encryption maintained across all components
+
+### 🔧 Technical Improvements
+
+#### Content Script Architecture
+- **REBUILT**: Complete content script with Flow-specific integration
+- **IMPLEMENTED**: Multi-strategy textarea detection system with fallbacks
+- **ADDED**: Dynamic button injection with mutation observer for SPA compatibility
+- **ENHANCED**: Professional modal system with dark theme matching Flow interface
+- **OPTIMIZED**: Real-time notification system for user feedback
+
+#### Background Service Worker
+- **REWRITTEN**: Complete background.js with unified API key handling
+- **INTEGRATED**: Minimal crypto class for AES-GCM decryption in service worker context
+- **IMPLEMENTED**: IMPROVE_PROMPT and CHANGE_PROMPT message handlers
+- **ENHANCED**: Comprehensive error handling for OpenAI API responses
+- **STANDARDIZED**: Consistent system prompt usage across all AI interactions
+
+#### Manifest Configuration
+- **UPDATED**: URL matching patterns for Google Labs Flow (`https://labs.google/fx/tools/flow/*`)
+- **MAINTAINED**: Backward compatibility with original Veo URLs
+- **SECURED**: Web accessible resources properly configured
+- **OPTIMIZED**: Content Security Policy compliance
+
+### 🎨 User Interface Enhancements
+
+#### Flow Interface Integration
+- **PROFESSIONAL**: Gradient-styled buttons with premium visual design
+- **RESPONSIVE**: Multiple positioning strategies for different Flow layouts
+- **INTUITIVE**: Loading states with animated indicators during AI processing
+- **ACCESSIBLE**: Proper ARIA labels and keyboard navigation support
+- **SEAMLESS**: Direct textarea content replacement with smooth animations
+
+#### Enhanced User Experience
+- **IMMEDIATE**: Real-time feedback with toast notifications
+- **CONTEXTUAL**: Error messages with actionable guidance
+- **CONSISTENT**: Unified visual language between popup and Flow integration
+- **EFFICIENT**: One-click prompt enhancement and modification workflow
+
+### 🛡️ System Prompt Unification
+
+#### Comprehensive SSASAC Framework
+1. **SUBJECT**: Detailed character/object identification with specific attributes
+2. **SCENE**: Rich environment descriptions with lighting and atmospheric details
+3. **ACTION**: Strong verb sequences with logical cause-and-effect chains
+4. **STYLE**: Visual aesthetic specifications with reference examples
+5. **AUDIO**: Complete sound design including dialogue format and ambient sounds
+6. **CAMERA**: Professional camera movements and shot specifications
+
+#### Output Standardization
+- **JSON FORMAT**: All AI responses now use structured JSON output
+- **CONSISTENCY**: Identical system prompts across popup modifications and Flow buttons
+- **RELIABILITY**: Robust JSON parsing with fallback handling
+- **QUALITY**: Enhanced prompt quality through unified framework application
+
+### 🔄 Files Modified
+
+#### Core Extension Files
+- `dist/content.js`: Complete rewrite with Flow integration and button injection system
+- `dist/background.js`: Service worker architecture with unified API key handling
+- `dist/manifest.json`: Updated URL patterns and permissions for Flow integration
+- `dist/enhanced-gpt-service.js`: Enhanced system prompt with CAMERA framework
+- `dist/popup.js`: Unified system prompt implementation
+- `dist/popup-secure.js`: Consistent prompt framework across security contexts
+
+#### System Integration
+- All AI-powered features now use identical SSASAC framework
+- JSON output format standardized across all prompt generation functions
+- Camera specifications integrated into professional video production workflow
+
+### 📊 Feature Matrix
+
+| Feature | Status | Implementation |
+|---------|--------|----------------|
+| Google Flow Integration | ✅ Complete | Dual-button system with modal interface |
+| Enhanced SSASAC Framework | ✅ Complete | Unified across all components |
+| JSON Output Standardization | ✅ Complete | Structured responses for all AI interactions |
+| API Key Encryption | ✅ Complete | AES-GCM with service worker compatibility |
+| Professional UI/UX | ✅ Complete | Premium styling with Flow theme matching |
+| Cross-Context Compatibility | ✅ Complete | Seamless popup and Flow integration |
+
+### 🚨 Breaking Changes
+None - All existing functionality enhanced while maintaining full backward compatibility.
+
+### 🎯 User Experience Improvements
+- **WORKFLOW**: Seamless prompt enhancement directly within Flow interface
+- **CONSISTENCY**: Unified AI responses across all extension features
+- **QUALITY**: Professional camera work specifications in all generated prompts
+- **RELIABILITY**: Robust error handling and user feedback systems
+- **ACCESSIBILITY**: Complete keyboard navigation and screen reader support
+
+---
+
 ## Version 1.9.0 - Premium Design Overhaul & Codebase Cleanup (2025-01-15)
 
 ### 🎨 Major Design System Improvements
