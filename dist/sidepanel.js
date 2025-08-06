@@ -190,13 +190,12 @@ Please modify the prompt according to the instruction using the SSASA framework.
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { 
-        width: 400px; 
-        height: 700px; 
+        width: 100%; 
+        height: 100vh; 
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         font-size: 14px;
-        color: #e0e0e0;
-        background: #1a1a1a;
-        border-radius: 12px;
+        color: #111113;
+        background: #ffffff;
         overflow: hidden;
       }
       .app { height: 100%; display: flex; flex-direction: column; }
@@ -335,14 +334,33 @@ Please modify the prompt according to the instruction using the SSASA framework.
       .status-indicator.disconnected { color: #ef4444; }
       .app-content {
         flex: 1;
-        overflow: hidden;
+        overflow-y: auto;
+        overflow-x: hidden;
         padding: 12px;
         display: flex;
         flex-direction: column;
       }
+      /* Thin autohide scrollbar */
+      .app-content::-webkit-scrollbar {
+        width: 4px;
+      }
+      .app-content::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .app-content::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 2px;
+        transition: background 0.2s;
+      }
+      .app-content:hover::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.3);
+      }
+      .app-content::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.4);
+      }
       #main-view {
         flex: 1;
-        overflow: hidden;
+        overflow: visible;
       }
       .category-grid {
         display: grid;

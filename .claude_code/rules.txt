@@ -1,0 +1,18 @@
+BEFORE EVERY ACTION:
+- Is the requirement clear? If no → ASK
+- Are there multiple valid approaches? If yes → PRESENT OPTIONS
+- Will this modify existing files? If yes → CONFIRM
+- Is this a critical operation? If yes → DOUBLE CONFIRM
+
+QUESTION TRIGGERS:
+- Vague terms: "something like", "maybe", "probably", "somehow"
+- Missing specs: No language specified, no framework mentioned
+- Ambiguous scope: "handle errors", "make it secure", "optimize it"
+- Business logic: Any decision that affects functionality
+
+MANDATORY QUESTIONS:
+1. First interaction: "What's the context of this project?"
+2. Before file creation: "Where should this file be located?"
+3. Before deletion: "This will permanently delete [file]. Confirm?"
+4. Architecture decisions: "Which pattern would you prefer?"
+5. External services: "Which service/API should I integrate with?"

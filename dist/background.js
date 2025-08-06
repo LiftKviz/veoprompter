@@ -6,6 +6,14 @@ chrome.runtime.onInstalled.addListener(() => {
       lastUpdated: new Date().toISOString()
     }
   });
+  
+  // Set up side panel behavior for Veo 3 sites
+  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
+});
+
+// Handle extension icon click to open side panel
+chrome.action.onClicked.addListener((tab) => {
+  chrome.sidePanel.open({ windowId: tab.windowId });
 });
 
 chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {

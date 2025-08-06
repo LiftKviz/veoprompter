@@ -6,7 +6,8 @@
   "permissions": [
     "storage",
     "clipboardWrite",
-    "identity"
+    "identity",
+    "sidePanel"
   ],
   "host_permissions": [
     "https://api.openai.com/*",
@@ -27,13 +28,16 @@
     ]
   },
   "action": {
-    "default_popup": "popup.html",
+    "default_title": "Open Veo 3 Assistant",
     "default_icon": {
       "16": "icons/icon16.svg",
       "32": "icons/icon32.svg",
       "48": "icons/icon48.svg",
       "128": "icons/icon128.svg"
     }
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
   },
   "icons": {
     "16": "icons/icon16.svg",

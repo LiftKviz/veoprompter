@@ -1,5 +1,111 @@
 # Veo 3 Prompt Assistant - Changelog
 
+## Version 1.11.0 - Chrome Side Panel Integration & Modern UI Redesign (2025-08-06)
+
+### 🚀 Major Features
+
+#### Chrome Side Panel API Integration
+- **NEW**: Chrome Side Panel support - extension now opens as a docked panel on the right side
+- **NEW**: Persistent side panel that stays open while navigating
+- **NEW**: Resizable panel width for optimal workspace usage
+- **NEW**: No longer covers Veo 3 workspace - perfect for side-by-side workflow
+- **ADDED**: `sidePanel` permission and configuration in manifest
+- **CREATED**: Dedicated `sidepanel.html`, `sidepanel.js`, and `sidepanel.css` files
+- **ENHANCED**: Background script to handle side panel opening on extension click
+
+#### Modern UI/UX Redesign (Based on Figma Design)
+- **REDESIGNED**: Complete header overhaul with clean, modern aesthetic
+- **SWITCHED**: From dark theme to light theme (#FFFFFF background)
+- **REMOVED**: Tier badge display - simplified header for cleaner look
+- **REMOVED**: "Veo 3 Prompt Assistant" text - now just logo with minimal design
+- **ENHANCED**: Search bar with rounded corners (15px), #F3F5F7 background, and shadow effect
+- **ADDED**: Action buttons for "Sequences" and "Custom Prompt" with gradient styling
+- **IMPROVED**: Typography using Inter font family with proper weights
+- **UPDATED**: Color scheme to match Figma design (#111113 text, rgba(17, 17, 19, 0.6) for secondary)
+
+#### Figma MCP Integration Setup
+- **INSTALLED**: Figma MCP (Model Context Protocol) for design file access
+- **CONFIGURED**: MCP server with Figma API integration
+- **ADDED**: `.mcp.json` configuration for Claude Code
+- **ENABLED**: Direct Figma design data extraction for pixel-perfect implementation
+
+### 🎨 UI/UX Improvements
+
+#### Header Refinements
+- **SIMPLIFIED**: Removed unnecessary BYOK button and tier display
+- **CLEANED**: Minimal header with just logo, API status indicator, and settings
+- **PERSISTENT**: Search bar always visible (no toggle needed)
+- **PROFESSIONAL**: Clean white background with subtle borders
+
+#### Layout Enhancements
+- **RESPONSIVE**: Full-width side panel that adapts to browser window
+- **SCROLLABLE**: Thin auto-hiding scrollbar (4px) for content area
+- **FIXED**: Header and action buttons stay in place while content scrolls
+- **OPTIMIZED**: Better use of vertical space with scrolling below action buttons
+
+#### Custom Prompt Interface
+- **NEW**: Dedicated Custom Prompt interface with textarea input
+- **ADDED**: Gradient-styled generate button with hover effects
+- **CREATED**: Clean form layout with proper spacing and styling
+- **INTEGRATED**: Smooth navigation between views with back button
+
+### 🔧 Technical Improvements
+
+#### Side Panel Architecture
+- **MIGRATED**: From popup-based extension to side panel implementation
+- **UPDATED**: Manifest v3 with proper side panel configuration
+- **MODIFIED**: Width constraints removed (100% width instead of fixed 400px)
+- **ADJUSTED**: Height to use full viewport (100vh)
+
+#### Code Organization
+- **MAINTAINED**: All existing functionality in side panel version
+- **PRESERVED**: Popup files for backward compatibility if needed
+- **ORGANIZED**: Separate CSS files for popup and side panel
+
+#### Configuration Management
+- **ADDED**: Claude Code configuration for interactive mode
+- **CONFIGURED**: No assumptions mode - asks before making changes
+- **SETUP**: Proper behavior settings in config.yaml
+
+### 🐛 Bug Fixes
+
+#### UI Consistency
+- **FIXED**: Category cards cut off at bottom - now scrollable
+- **RESOLVED**: Search functionality with always-visible search bar
+- **CORRECTED**: Event listeners for new UI elements
+- **IMPROVED**: Clear search button visibility logic
+
+#### Performance
+- **OPTIMIZED**: Scrollbar performance with CSS-only implementation
+- **REDUCED**: Unnecessary re-renders with proper event handling
+- **ENHANCED**: Smooth transitions and animations
+
+### 📊 Feature Matrix
+
+| Feature | Status | Implementation |
+|---------|--------|----------------|
+| Chrome Side Panel | ✅ Complete | Docked right panel implementation |
+| Modern UI Design | ✅ Complete | Light theme based on Figma |
+| Header Simplification | ✅ Complete | Minimal design with logo only |
+| Search Enhancement | ✅ Complete | Always visible with better styling |
+| Custom Prompt UI | ✅ Complete | Dedicated interface with gradient buttons |
+| Scrollable Content | ✅ Complete | Thin auto-hide scrollbar |
+| Figma MCP | ✅ Complete | Configured for design extraction |
+
+### 🚨 Breaking Changes
+- Extension now opens as side panel instead of popup (better UX, no workspace blocking)
+- Light theme is now default (was dark theme)
+- Tier display removed from header (will be added in future paid version)
+
+### 🎯 User Experience Improvements
+- **WORKFLOW**: Side panel doesn't block Veo 3 workspace
+- **PERSISTENCE**: Panel stays open while working
+- **VISIBILITY**: Better contrast with light theme
+- **SIMPLICITY**: Cleaner interface with less clutter
+- **ACCESSIBILITY**: Improved readability and navigation
+
+---
+
 ## Version 1.10.0 - Flow Integration & Enhanced System Prompts (2025-08-06)
 
 ### 🚀 Major Features

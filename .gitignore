@@ -1,2 +1,11 @@
 # Local Netlify folder
 .netlify
+
+# Claude Code configuration with API keys
+.mcp.json
+.claude_preferences
+.claude_code/
+
+# OS files
+.DS_Store
+**/.DS_Store

@@ -1,0 +1,28 @@
+{
+  "interaction_level": "high",
+  "require_confirmation": true,
+  "preferences": {
+    "always_ask_about": [
+      "database_schema_changes",
+      "api_modifications",
+      "dependency_updates",
+      "file_deletions"
+    ],
+    "never_assume": [
+      "production_values",
+      "api_keys",
+      "third_party_services"
+    ],
+    "default_questions": [
+      "What's the target environment?",
+      "Are there existing tests I should follow?",
+      "What's the error handling strategy?",
+      "Should I follow specific code style guidelines?"
+    ]
+  },
+  "templates": {
+    "clarification": "I need more information about {topic}. Could you specify {details}?",
+    "confirmation": "I'm about to {action}. This will {consequence}. Proceed?",
+    "options": "There are multiple approaches:\n1. {option1}\n2. {option2}\nWhich would you prefer?"
+  }
+}
