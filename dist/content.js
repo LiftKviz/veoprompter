@@ -20,23 +20,28 @@ function sanitizePrompt(prompt) {
 const styles = `
   .veo-assistant-button {
     position: absolute;
-    bottom: 8px;
-    padding: 6px 10px;
-    border-radius: 20px;
+    left: -40px;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border-radius: 50%;
     border: none;
     color: white;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 500;
     cursor: pointer;
     z-index: 9999;
     transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
   .veo-assistant-button:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
   }
   
   .veo-assistant-button:active {
@@ -45,12 +50,12 @@ const styles = `
   
   .veo-assistant-button.improve {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    left: 10px;
+    top: calc(50% - 18px);
   }
   
   .veo-assistant-button.change {
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    left: 140px;
+    top: calc(50% + 12px);
   }
   
   .veo-assistant-button.loading {
@@ -340,7 +345,8 @@ function injectButtons() {
   // Create Improve button
   const improveBtn = document.createElement('button');
   improveBtn.className = 'veo-assistant-button improve';
-  improveBtn.textContent = '✨ Improve Prompt';
+  improveBtn.textContent = '✨';
+  improveBtn.title = 'Improve this prompt with AI';
   improveBtn.onclick = async () => {
     const currentPrompt = textarea.value.trim();
     if (!currentPrompt) {
@@ -377,7 +383,8 @@ function injectButtons() {
   // Create Change button
   const changeBtn = document.createElement('button');
   changeBtn.className = 'veo-assistant-button change';
-  changeBtn.textContent = '🔄 Change Prompt';
+  changeBtn.textContent = '🔄';
+  changeBtn.title = 'Modify prompt with custom instructions';
   changeBtn.onclick = () => {
     const currentPrompt = textarea.value.trim();
     if (!currentPrompt) {
