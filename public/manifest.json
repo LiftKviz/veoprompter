@@ -16,7 +16,7 @@
     "https://extensionpay.com/*"
   ],
   "oauth2": {
-    "client_id": "43646976330-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX.apps.googleusercontent.com",
+    "client_id": "374428444834-8n6q86s3scnmlpc4t2dsj1mvee76fi1t.apps.googleusercontent.com",
     "scopes": [
       "https://www.googleapis.com/auth/userinfo.email",
       "https://www.googleapis.com/auth/userinfo.profile"
@@ -42,7 +42,10 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://veo.google.com/*"],
+      "matches": [
+        "https://veo.google.com/*",
+        "https://labs.google/fx/tools/flow/*"
+      ],
       "js": ["content.js"],
       "run_at": "document_idle"
     }

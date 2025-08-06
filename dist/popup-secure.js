@@ -40,10 +40,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 3) ACTION: Define what subject is doing with strong verbs, chain actions with 'this happens, then that happens'
 4) STYLE: Specify visual aesthetic (e.g., '1990s VHS footage', '8-bit video game', 'claymation', 'filmed on 16mm')
 5) AUDIO: Explicitly describe all sounds - dialogue, ambient sounds, SFX, and music (Veo 3's signature feature)
+6) CAMERA: Specify camera movements and shots (e.g., 'dolly in', 'handheld', 'aerial view', 'close-up', 'tracking shot')
 
 For dialogue, use format: "Character Name says (with emotional tone): 'Exact words.'" - This prevents mixing up speakers.
 
-Include negative prompt (no subtitles, no on-screen text) unless requested. Keep modifications concise and focused on the user's instruction while maintaining Veo 3 best practices.`;
+Include negative prompt (no subtitles, no on-screen text) unless requested. Keep modifications concise and focused on the user's instruction while maintaining Veo 3 best practices.
+
+IMPORTANT: Always output your response in JSON format: {"prompt": "your enhanced prompt here"}`;
 
       try {
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
