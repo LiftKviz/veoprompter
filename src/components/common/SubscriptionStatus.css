@@ -1,0 +1,199 @@
+.subscription-status {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 8px;
+  background: var(--background-color, #f8f9fa);
+  border: 1px solid var(--border-color, #e1e5e9);
+  font-size: 13px;
+}
+
+.subscription-status.premium {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+}
+
+.subscription-status.free {
+  background: #f8f9fa;
+  color: #495057;
+}
+
+.subscription-status.error {
+  background: #fff5f5;
+  border-color: #fed7d7;
+  color: #c53030;
+}
+
+.subscription-status.loading {
+  background: #f7fafc;
+  border-color: #e2e8f0;
+  color: #718096;
+}
+
+.status-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-indicator.premium {
+  background: #48bb78;
+  box-shadow: 0 0 0 2px rgba(72, 187, 120, 0.2);
+}
+
+.status-indicator.free {
+  background: #ed8936;
+  box-shadow: 0 0 0 2px rgba(237, 137, 54, 0.2);
+}
+
+.status-indicator.error {
+  background: #f56565;
+  box-shadow: 0 0 0 2px rgba(245, 101, 101, 0.2);
+}
+
+.status-indicator.loading {
+  background: #cbd5e0;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.status-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.status-label {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.subscription-details {
+  font-size: 11px;
+  opacity: 0.8;
+  text-transform: capitalize;
+}
+
+.usage-limits {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.usage-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+
+.usage-item span:first-child {
+  color: #6c757d;
+}
+
+.usage-item span:last-child {
+  font-weight: 500;
+}
+
+.usage-item .limit-reached {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.status-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.upgrade-button {
+  flex: 1;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+}
+
+.upgrade-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.subscription-status.premium .upgrade-button {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.subscription-status.premium .upgrade-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+}
+
+.details-button {
+  padding: 8px 12px;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0.8;
+}
+
+.details-button:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.subscription-status.premium .details-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.premium-since {
+  font-size: 11px;
+  opacity: 0.7;
+  text-align: center;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .subscription-status.free {
+    background: #2d3748;
+    color: #e2e8f0;
+    border-color: #4a5568;
+  }
+  
+  .subscription-status.loading {
+    background: #2d3748;
+    border-color: #4a5568;
+    color: #a0aec0;
+  }
+  
+  .details-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+}

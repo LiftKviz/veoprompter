@@ -1,0 +1,270 @@
+{
+  "video_knowledge_base": {
+    "camera_techniques": {
+      "shots": {
+        "extreme_wide_shot": "Shows vast landscape or environment, subject appears very small",
+        "wide_shot": "Shows full subject and surrounding environment for context",
+        "medium_shot": "Shows subject from waist up, balanced focus on subject and environment", 
+        "close_up": "Shows subject's face or important details, creates intimacy",
+        "extreme_close_up": "Shows very specific detail like eyes or hands, high emotional impact",
+        "over_shoulder": "Shot from behind one person looking at another, creates connection",
+        "bird_eye_view": "Shot from directly above, provides unique perspective",
+        "worm_eye_view": "Shot from ground level looking up, creates dramatic effect"
+      },
+      "movements": {
+        "pan": "Horizontal camera movement left or right while staying in same position",
+        "tilt": "Vertical camera movement up or down while staying in same position",
+        "dolly": "Camera moves closer to or further from subject on tracks or wheels",
+        "truck": "Camera moves left or right parallel to subject",
+        "pedestal": "Camera moves up or down vertically",
+        "zoom": "Lens adjustment to make subject appear closer or further",
+        "handheld": "Camera held by hand for natural, slightly shaky movement",
+        "steadicam": "Smooth camera movement using stabilizing equipment",
+        "gimbal": "Electronic stabilization for smooth movement during motion"
+      },
+      "angles": {
+        "eye_level": "Camera at same height as subject's eyes, neutral perspective",
+        "low_angle": "Camera below subject looking up, makes subject appear powerful",
+        "high_angle": "Camera above subject looking down, makes subject appear vulnerable",
+        "dutch_angle": "Camera tilted to create diagonal horizon, suggests unease or tension"
+      }
+    },
+    "lighting_techniques": {
+      "natural_lighting": {
+        "golden_hour": "Warm, soft light during sunrise/sunset, creates romantic mood",
+        "blue_hour": "Cool twilight light, creates dramatic atmosphere",
+        "overcast": "Soft, even lighting from cloudy sky, reduces harsh shadows",
+        "direct_sunlight": "Strong, harsh light creating defined shadows and high contrast",
+        "window_light": "Soft, directional light from windows, flattering for portraits"
+      },
+      "artificial_lighting": {
+        "key_light": "Main light source illuminating subject",
+        "fill_light": "Secondary light to reduce shadows created by key light",
+        "back_light": "Light behind subject to separate from background",
+        "rim_light": "Light around edges of subject creating outline effect",
+        "practical_light": "Visible light sources within scene like lamps or neon signs",
+        "color_temperature": "Warm (3200K tungsten) vs Cool (5600K daylight) lighting moods"
+      },
+      "lighting_moods": {
+        "high_key": "Bright, even lighting with minimal shadows, cheerful mood",
+        "low_key": "Dramatic lighting with strong shadows, mysterious mood",
+        "silhouette": "Subject backlit against bright background, creating dark outline",
+        "chiaroscuro": "Strong contrast between light and dark areas, dramatic effect"
+      }
+    },
+    "composition_rules": {
+      "rule_of_thirds": "Divide frame into 9 sections, place subjects along lines or intersections",
+      "leading_lines": "Use lines in scene to guide viewer's eye toward subject",
+      "framing": "Use elements in scene to frame subject, draws attention",
+      "symmetry": "Balanced composition with equal elements on both sides",
+      "patterns": "Repetitive elements that create visual rhythm",
+      "negative_space": "Empty areas around subject that provide breathing room",
+      "depth_of_field": "Control what's in focus vs blurred to direct attention",
+      "foreground_midground_background": "Layer elements at different distances for depth"
+    },
+    "audio_techniques": {
+      "diegetic_sound": "Sound that exists within the story world (dialogue, footsteps)",
+      "non_diegetic_sound": "Sound added in post (music, narration)",
+      "ambient_sound": "Background environmental sounds that set location",
+      "sound_effects": "Added sounds to enhance action or emotion",
+      "music_genres": {
+        "cinematic_orchestral": "Epic, emotional scoring for dramatic moments",
+        "electronic": "Modern, energetic music for tech or futuristic content",
+        "acoustic": "Organic, intimate music for personal or natural content",
+        "ambient": "Atmospheric, textural music that doesn't distract",
+        "upbeat_pop": "Energetic music for commercials and social media"
+      }
+    },
+    "visual_styles": {
+      "cinematic": "Film-like quality with shallow depth of field and color grading",
+      "documentary": "Realistic, handheld style that feels authentic",
+      "commercial": "Polished, bright style optimized for advertising",
+      "social_media": "Vertical format, fast-paced, attention-grabbing",
+      "vintage": "Retro aesthetics with film grain and warm tones",
+      "minimalist": "Clean, simple composition with lots of negative space",
+      "gritty": "Raw, high-contrast style with desaturated colors",
+      "dreamy": "Soft, ethereal quality with gentle lighting and pastels"
+    },
+    "color_theory": {
+      "color_palettes": {
+        "complementary": "Colors opposite on color wheel, high contrast",
+        "analogous": "Colors next to each other on wheel, harmonious",
+        "triadic": "Three colors evenly spaced on wheel, vibrant",
+        "monochromatic": "Different shades of same color, unified look"
+      },
+      "color_psychology": {
+        "red": "Energy, passion, urgency, danger",
+        "blue": "Trust, calm, professional, technology",
+        "green": "Nature, growth, harmony, health",
+        "yellow": "Happiness, optimism, attention, creativity",
+        "orange": "Enthusiasm, warmth, friendliness",
+        "purple": "Luxury, mystery, creativity, spirituality",
+        "black": "Elegance, power, sophistication",
+        "white": "Purity, simplicity, cleanliness"
+      }
+    },
+    "pacing_techniques": {
+      "slow_motion": "Slowed footage for dramatic effect or detail emphasis",
+      "time_lapse": "Sped up footage to show change over time",
+      "quick_cuts": "Fast editing for energy and excitement",
+      "long_takes": "Extended shots for contemplation or realism",
+      "montage": "Series of short shots to show progression or variety",
+      "crosscutting": "Alternating between different scenes or locations"
+    },
+    "storytelling_elements": {
+      "establishing_shot": "Wide shot that shows location and context",
+      "action_sequence": "Dynamic movement and conflict",
+      "emotional_moment": "Focus on character feelings and reactions",
+      "transition": "Moving from one scene or idea to another",
+      "reveal": "Slowly showing important information or surprise",
+      "climax": "Peak moment of tension or excitement",
+      "resolution": "Conclusion that provides closure"
+    },
+    "technical_specifications": {
+      "aspect_ratios": {
+        "16:9": "Standard widescreen for web and TV",
+        "9:16": "Vertical format for mobile and social media",
+        "4:3": "Traditional format, more square",
+        "21:9": "Ultra-wide cinematic format",
+        "1:1": "Square format for social media"
+      },
+      "frame_rates": {
+        "24fps": "Cinematic, film-like motion",
+        "30fps": "Standard video, smooth motion",
+        "60fps": "Very smooth, good for action",
+        "120fps": "High frame rate for slow motion"
+      },
+      "resolutions": {
+        "4K": "3840x2160, ultra high definition",
+        "1080p": "1920x1080, full high definition",
+        "720p": "1280x720, high definition"
+      }
+    },
+    "industry_terms": {
+      "b_roll": "Supplementary footage to support main content",
+      "cutaway": "Shot that cuts away from main action to show detail",
+      "insert": "Close-up shot of object or detail within scene",
+      "match_cut": "Cut between shots with similar composition or motion",
+      "jump_cut": "Abrupt cut within same scene that creates discontinuity",
+      "smash_cut": "Sudden cut from one scene to dramatically different scene",
+      "fade_in_out": "Gradual transition from/to black",
+      "dissolve": "Gradual transition where one shot blends into another",
+      "wipe": "Transition where new shot pushes old shot off screen"
+    },
+    "content_categories": {
+      "commercial": {
+        "product_showcase": "Focus on product features and benefits",
+        "lifestyle": "Show product in context of user's life",
+        "testimonial": "Real people sharing experiences",
+        "comparison": "Showing advantages over competitors",
+        "emotional": "Creating feeling/mood associated with brand"
+      },
+      "educational": {
+        "tutorial": "Step-by-step instruction format",
+        "explainer": "Complex concepts made simple",
+        "demonstration": "Showing how something works",
+        "interview": "Expert sharing knowledge",
+        "documentary": "In-depth exploration of topic"
+      },
+      "entertainment": {
+        "narrative": "Story with beginning, middle, end",
+        "comedy": "Humor-focused content",
+        "drama": "Emotional, character-driven content",
+        "action": "Fast-paced, exciting sequences",
+        "horror": "Suspense and fear elements"
+      },
+      "social_media": {
+        "unboxing": "Revealing product from packaging",
+        "behind_scenes": "Showing process or preparation",
+        "reaction": "Genuine response to content",
+        "challenge": "Participating in viral trends",
+        "day_in_life": "Personal, authentic content"
+      }
+    },
+    "prompt_enhancement_guidelines": {
+      "duration_considerations": {
+        "micro_content": "Under 15 seconds - single concept, immediate impact",
+        "short_form": "15-60 seconds - one main idea with setup/payoff", 
+        "medium_form": "1-3 minutes - multiple concepts, narrative arc",
+        "long_form": "3+ minutes - complex storytelling, multiple acts"
+      },
+      "essential_elements": {
+        "subject": "What or who is the focus of the video",
+        "action": "What happens in the video",
+        "setting": "Where and when the video takes place",
+        "mood": "Overall emotional tone and atmosphere",
+        "style": "Visual approach and aesthetic choices",
+        "purpose": "What the video aims to achieve"
+      },
+      "quality_indicators": {
+        "specificity": "Detailed descriptions rather than vague terms",
+        "visual_clarity": "Clear description of what viewer will see",
+        "technical_accuracy": "Proper use of film/video terminology",
+        "emotional_resonance": "Connection to intended audience feeling",
+        "brand_alignment": "Consistency with intended message/values",
+        "production_feasibility": "Realistic within technical constraints"
+      }
+    },
+    "veo_3_specific": {
+      "ssasa_framework": {
+        "subject": "Clearly identify who/what is the focus with specific details (e.g., 'grizzled detective in rumpled trench coat' not 'a man')",
+        "scene": "Describe environment in detail - where and when action occurs (e.g., 'dusty attic with afternoon light through grimy window')",
+        "action": "Define what subject is doing with strong verbs, chain actions with 'this happens, then that happens'",
+        "style": "Specify visual aesthetic (e.g., '1990s VHS footage', '8-bit video game', 'claymation', 'filmed on 16mm')",
+        "audio": "Explicitly describe all sounds - dialogue, ambient sounds, SFX, and music (Veo 3's signature feature)"
+      },
+      "audio_prompting": {
+        "dialogue_format": "Character Name says (with emotional tone): 'Exact words.' - This prevents mixing up speakers",
+        "dialogue_tips": "Speech generation less reliable for clips under 8 seconds or prompts involving minors",
+        "sound_effects": "Be explicit and layered (e.g., 'twigs snapping underfoot, distant birdsong, wind rustling leaves')",
+        "music_description": "Describe genre, mood, instrumentation (e.g., 'light orchestral score with prominent woodwinds')",
+        "diegetic_vs_non_diegetic": "Specify if sound originates from within the scene (diegetic) or added for audience (non-diegetic)"
+      },
+      "camera_direction": {
+        "impossible_moves": "Veo 3 can handle physically impossible camera movements like 'seamless transitions through walls'",
+        "complex_movements": "Chain movements: 'dolly in, then pan left, finishing with a crane shot'",
+        "emotional_impact": "Use camera movement to enhance narrative: slow dolly in for discovery, handheld for urgency"
+      },
+      "character_consistency": {
+        "character_dossier_method": "Write detailed paragraph describing character's features, clothing, distinctive marks. Copy/paste exact description in every shot for consistency",
+        "image_anchor_method": "Use AI-generated portrait as input image for video generation to maintain appearance",
+        "key_elements": "Include: physical appearance, hair style/color, distinctive marks (scars), specific clothing"
+      },
+      "technical_parameters": {
+        "aspect_ratios": {
+          "16:9": "Standard landscape for YouTube and cinematic content",
+          "9:16": "Portrait/vertical for TikTok, Reels, Shorts"
+        },
+        "negative_prompts": "Add parenthetical instructions: (no subtitles, no on-screen text) to avoid unwanted elements",
+        "seed_number": "Use same seed with same prompt for reproducible results, allows controlled iteration",
+        "video_length": "Typically 5-8 seconds per clip, longer sequences created by stitching",
+        "safety_filters": "Avoid subjective terms like 'attractive', use objective descriptions of features/clothing"
+      },
+      "sequencing_techniques": {
+        "this_then_that": "Describe action chains: 'walks to table, picks up key, then strides to door'",
+        "emotion_chaining": "Direct emotional arcs: 'bursts into laughter, then face freezes with terror'",
+        "micro_narratives": "Create complete story arcs within single 8-second clips"
+      },
+      "style_references": {
+        "film_noir": "Moody black-and-white with low-key lighting and urban settings",
+        "voxel_art": "Blocky, pixelated style like Minecraft",
+        "1990s_vhs": "Degraded, low-fidelity with tape artifacts",
+        "cinematic_realism": "Photorealistic with film-like depth of field",
+        "animation_styles": "Claymation, stop-motion, 2D animation, anime-inspired"
+      },
+      "prompt_transformation_patterns": {
+        "before_after_examples": [
+          {
+            "before": "An astronaut on Mars",
+            "after": "Wide shot of lone astronaut in white exosuit on crimson Mars plains under dusty pink sky. Camera slow dolly in as astronaut kneels, brushing dust off glowing blue crystal. Audio: steady breathing in helmet, faint wind hum. Style: Photorealistic, IMAX camera, sharp focus"
+          },
+          {
+            "before": "A woman talking",
+            "after": "Medium close-up of woman in 30s with dark curly hair and glasses in cozy sunlit cafe. Woman says (warm, tired tone): 'It was one of those days, you know?' Audio: soft cafe ambiance, clinking cups. (no subtitles)"
+          }
+        ]
+      },
+      "system_prompt_template": "You are an expert AI prompt engineer specializing in Google Veo 3. Transform ideas into prompts with: 1) Detailed subject description 2) Vivid scene depiction 3) Clear action sequence 4) Visual style 5) Specific shots/camera movements 6) Lighting/color details 7) Complete audio description including dialogue format. Include negative prompt (no subtitles, no on-screen text) unless requested."
+    }
+  }
+}

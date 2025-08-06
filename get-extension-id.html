@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Get Chrome Extension ID</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .step { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .code { background: #f5f5f5; padding: 10px; border-radius: 3px; font-family: monospace; }
+        .important { background: #fff3cd; padding: 10px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>Chrome Extension Setup Steps</h1>
+    
+    <div class="step">
+        <h2>Step 1: Load Extension in Chrome</h2>
+        <ol>
+            <li>Open Chrome and go to <code>chrome://extensions/</code></li>
+            <li>Enable "Developer mode" (top right toggle)</li>
+            <li>Click "Load unpacked"</li>
+            <li>Select the <code>dist</code> folder from your extension project</li>
+            <li>Copy the Extension ID that appears under your extension</li>
+        </ol>
+        
+        <div class="important">
+            <strong>Extension ID Format:</strong> Something like <code>abcdefghijklmnopqrstuvwxyzabcdef</code>
+        </div>
+    </div>
+    
+    <div class="step">
+        <h2>Step 2: Create OAuth Client in Google Cloud Console</h2>
+        <ol>
+            <li>Go to <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a></li>
+            <li>Select your project: <code>videoprompter-d6a18</code></li>
+            <li>Navigate to <strong>APIs & Services</strong> > <strong>Credentials</strong></li>
+            <li>Click <strong>+ CREATE CREDENTIALS</strong> > <strong>OAuth client ID</strong></li>
+            <li>Select <strong>Chrome Extension</strong> as application type</li>
+            <li>Enter your Extension ID from Step 1</li>
+            <li>Click <strong>Create</strong></li>
+            <li>Copy the generated Client ID</li>
+        </ol>
+        
+        <div class="important">
+            <strong>Client ID Format:</strong> <code>123456789-abcdefghijk.apps.googleusercontent.com</code>
+        </div>
+    </div>
+    
+    <div class="step">
+        <h2>Step 3: Update manifest.json</h2>
+        <p>Replace the client_id in <code>dist/manifest.json</code>:</p>
+        <div class="code">
+"oauth2": {<br>
+&nbsp;&nbsp;"client_id": "YOUR_ACTUAL_CLIENT_ID_HERE.apps.googleusercontent.com",<br>
+&nbsp;&nbsp;"scopes": [<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"https://www.googleapis.com/auth/userinfo.email",<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"https://www.googleapis.com/auth/userinfo.profile"<br>
+&nbsp;&nbsp;]<br>
+}
+        </div>
+    </div>
+    
+    <div class="step">
+        <h2>Step 4: Test Sign In</h2>
+        <ol>
+            <li>Go back to <code>chrome://extensions/</code></li>
+            <li>Click the refresh icon on your extension</li>
+            <li>Click the extension icon in the toolbar</li>
+            <li>Click the "🔑 Sign In" button</li>
+            <li>Check the browser console (F12) for any error messages</li>
+        </ol>
+        
+        <div class="important">
+            <strong>Console Check:</strong> Look for messages like "Sign in button clicked" and any error messages
+        </div>
+    </div>
+    
+    <div class="step">
+        <h2>Common Issues & Solutions</h2>
+        <ul>
+            <li><strong>"Chrome Identity API not available"</strong> - Extension permissions issue</li>
+            <li><strong>"Invalid client"</strong> - Wrong Extension ID or Client ID</li>
+            <li><strong>Nothing happens</strong> - Check console for JavaScript errors</li>
+            <li><strong>"Unauthorized"</strong> - Need to configure OAuth consent screen</li>
+        </ul>
+    </div>
+    
+    <script>
+        // Show current extension info if available
+        if (typeof chrome !== 'undefined' && chrome.runtime) {
+            document.body.innerHTML += `
+                <div class="step">
+                    <h2>Current Extension Info</h2>
+                    <p><strong>Extension ID:</strong> <code>${chrome.runtime.id}</code></p>
+                    <p>Copy this ID for use in Google Cloud Console!</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

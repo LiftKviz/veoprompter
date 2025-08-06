@@ -1,0 +1,47 @@
+{
+  "name": "veo-3-prompt-assistant",
+  "version": "1.0.0",
+  "description": "Chrome extension for discovering and managing Veo 3 prompt templates",
+  "private": true,
+  "scripts": {
+    "build": "webpack --mode production",
+    "dev": "webpack --mode development --watch",
+    "test": "jest",
+    "lint": "eslint src --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
+    "video": "remotion studio src/remotion/index.tsx --public-dir=public-remotion",
+    "video:render": "remotion render src/remotion/index.tsx VeoPromo out/veo-promo.mp4 --public-dir=public-remotion"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.327",
+    "clsx": "^2.1.0",
+    "extpay": "^3.1.1",
+    "firebase": "^9.23.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "remotion": "^4.0.327"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.254",
+    "@types/react": "^18.2.48",
+    "@types/react-dom": "^18.2.18",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0",
+    "copy-webpack-plugin": "^11.0.0",
+    "css-loader": "^6.9.1",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "html-webpack-plugin": "^5.6.0",
+    "jest": "^29.7.0",
+    "mini-css-extract-plugin": "^2.7.7",
+    "prettier": "^3.2.4",
+    "style-loader": "^3.3.4",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.3.3",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4"
+  }
+}

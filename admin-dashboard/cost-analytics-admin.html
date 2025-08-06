@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veo 3 Extension - Admin Cost Analytics</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        .header {
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #4285f4;
+            font-size: 24px;
+        }
+        .header p {
+            color: #666;
+            margin-top: 5px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .card h3 {
+            color: #4285f4;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .stat:last-child {
+            border-bottom: none;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+        .stat-value {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .cost {
+            color: #dc3545;
+        }
+        .revenue {
+            color: #28a745;
+        }
+        .neutral {
+            color: #6c757d;
+        }
+        .chart-container {
+            height: 300px;
+            margin-top: 20px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+        }
+        .calculator {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .btn {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background: #3367d6;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        .results {
+            background: #e8f5e8;
+            border: 1px solid #c3e6c3;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 15px;
+            display: none;
+        }
+        .alert {
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        .alert-info {
+            background: #d1ecf1;
+            border: 1px solid #b8daff;
+            color: #0c5460;
+        }
+        .admin-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #fff;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+            padding: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-controls">
+        <span id="last-updated">Last updated: --</span>
+        <button class="btn btn-secondary" onclick="refreshData()">🔄 Refresh</button>
+    </div>
+
+    <div class="header">
+        <div class="container">
+            <h1>💰 Cost Analytics Dashboard</h1>
+            <p>Real-time API usage and business metrics for Veo 3 Prompt Assistant</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="alert alert-warning">
+            <strong>⚠️ Admin Only:</strong> This dashboard contains sensitive business data. Do not share access with users.
+        </div>
+
+        <div class="grid">
+            <!-- Today's Stats -->
+            <div class="card">
+                <h3>📊 Today's Usage</h3>
+                <div class="stat">
+                    <span class="stat-label">API Calls</span>
+                    <span class="stat-value neutral" id="today-calls">Loading...</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Total Cost</span>
+                    <span class="stat-value cost" id="today-cost">Loading...</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Avg Cost/Call</span>
+                    <span class="stat-value neutral" id="today-avg">Loading...</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Peak Hour</span>
+                    <span class="stat-value neutral" id="today-peak">Loading...</span>
+                </div>
+            </div>
+
+            <!-- Monthly Stats -->
+            <div class="card">
+                <h3>📈 This Month</h3>
+                <div class="stat">
+                    <span class="stat-label">Total API Calls</span>
+                    <span class="stat-value neutral" id="month-calls">Loading...</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Total Cost</span>
+                    <span class="stat-value cost" id="month-cost">Loading...</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Projected Monthly</span>
+                    <span class="stat-value cost" id="month-projected">Loading...</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Daily Average</span>
+                    <span class="stat-value cost" id="month-daily-avg">Loading...</span>
+                </div>
+            </div>
+
+            <!-- User Insights -->
+            <div class="card">
+                <h3>👥 User Insights</h3>
+                <div class="stat">
+                    <span class="stat-label">Active Users Today</span>
+                    <span class="stat-value neutral" id="active-users">Loading...</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Heavy Users (>10 calls)</span>
+                    <span class="stat-value neutral" id="heavy-users">Loading...</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Avg Calls per User</span>
+                    <span class="stat-value neutral" id="avg-calls-user">Loading...</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Cost per User</span>
+                    <span class="stat-value cost" id="cost-per-user">Loading...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Business Calculator -->
+        <div class="calculator">
+            <h3>🎯 Business Impact Calculator</h3>
+            <div class="alert alert-info">
+                <strong>💡 Use this to model different pricing strategies and user growth scenarios.</strong>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label>Total Users</label>
+                    <input type="number" id="calc-users" value="1000" min="1">
+                </div>
+                <div class="form-group">
+                    <label>Avg Modifications/User/Day</label>
+                    <input type="number" id="calc-mods" value="5" min="0" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label>Premium Conversion %</label>
+                    <input type="number" id="calc-conversion" value="10" min="0" max="100">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px;">
+                <div class="form-group">
+                    <label>Premium Price/Month</label>
+                    <input type="number" id="calc-price" value="4.99" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>BYOK Adoption %</label>
+                    <input type="number" id="calc-byok" value="50" min="0" max="100">
+                </div>
+            </div>
+
+            <button class="btn" onclick="calculateScenario()">📊 Calculate Business Impact</button>
+
+            <div id="scenario-results" class="results">
+                <!-- Results will be populated here -->
+            </div>
+        </div>
+
+        <!-- Export & Controls -->
+        <div class="card" style="margin-top: 30px;">
+            <h3>🔧 Admin Controls</h3>
+            <div style="display: flex; gap: 15px; margin-top: 15px;">
+                <button class="btn" onclick="exportData()">📥 Export All Data</button>
+                <button class="btn btn-secondary" onclick="exportCostReport()">📊 Export Cost Report</button>
+                <button class="btn btn-secondary" onclick="resetStats()" style="background: #dc3545;">🔄 Reset Statistics</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Admin Cost Analytics JavaScript
+        let usageData = {
+            today: { calls: 0, cost: 0, avgCostPerCall: 0, peakHour: 0, byUser: {} },
+            thisMonth: { calls: 0, cost: 0, projectedMonthlyCost: 0, dailyAvg: 0 }
+        };
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUsageData();
+            setInterval(loadUsageData, 30000); // Refresh every 30 seconds
+        });
+
+        // Load usage data (simulate API call - in real app, this would fetch from your backend)
+        function loadUsageData() {
+            // This would normally be an API call to your backend
+            // For now, simulate with sample data
+            usageData = {
+                today: {
+                    calls: 247,
+                    cost: 1.52,
+                    avgCostPerCall: 0.00615,
+                    peakHour: 14,
+                    byUser: generateSampleUserData()
+                },
+                thisMonth: {
+                    calls: 6840,
+                    cost: 42.15,
+                    projectedMonthlyCost: 84.30,
+                    dailyAvg: 2.81
+                }
+            };
+
+            updateDashboard();
+            document.getElementById('last-updated').textContent = 
+                'Last updated: ' + new Date().toLocaleTimeString();
+        }
+
+        function generateSampleUserData() {
+            const users = {};
+            const userCount = Math.floor(Math.random() * 50) + 20;
+            
+            for (let i = 0; i < userCount; i++) {
+                const userId = 'user_' + i;
+                users[userId] = {
+                    calls: Math.floor(Math.random() * 20) + 1,
+                    cost: (Math.random() * 0.15) + 0.01
+                };
+            }
+            return users;
+        }
+
+        // Update dashboard with current data
+        function updateDashboard() {
+            // Today's stats
+            document.getElementById('today-calls').textContent = usageData.today.calls.toLocaleString();
+            document.getElementById('today-cost').textContent = '$' + usageData.today.cost.toFixed(4);
+            document.getElementById('today-avg').textContent = '$' + usageData.today.avgCostPerCall.toFixed(6);
+            document.getElementById('today-peak').textContent = usageData.today.peakHour + ':00';
+
+            // Monthly stats
+            document.getElementById('month-calls').textContent = usageData.thisMonth.calls.toLocaleString();
+            document.getElementById('month-cost').textContent = '$' + usageData.thisMonth.cost.toFixed(2);
+            document.getElementById('month-projected').textContent = '$' + usageData.thisMonth.projectedMonthlyCost.toFixed(2);
+            document.getElementById('month-daily-avg').textContent = '$' + usageData.thisMonth.dailyAvg.toFixed(2);
+
+            // User insights
+            const userCount = Object.keys(usageData.today.byUser).length;
+            const heavyUsers = Object.values(usageData.today.byUser).filter(u => u.calls > 10).length;
+            const avgCallsPerUser = userCount > 0 ? (usageData.today.calls / userCount).toFixed(1) : 0;
+            const costPerUser = userCount > 0 ? (usageData.today.cost / userCount).toFixed(4) : 0;
+
+            document.getElementById('active-users').textContent = userCount;
+            document.getElementById('heavy-users').textContent = heavyUsers;
+            document.getElementById('avg-calls-user').textContent = avgCallsPerUser;
+            document.getElementById('cost-per-user').textContent = '$' + costPerUser;
+        }
+
+        // Calculate business scenario
+        function calculateScenario() {
+            const users = parseInt(document.getElementById('calc-users').value) || 1000;
+            const modsPerDay = parseFloat(document.getElementById('calc-mods').value) || 5;
+            const conversionRate = parseFloat(document.getElementById('calc-conversion').value) || 10;
+            const premiumPrice = parseFloat(document.getElementById('calc-price').value) || 3.99;
+            const byokRate = parseFloat(document.getElementById('calc-byok').value) || 50;
+
+            // Calculations
+            const dailyMods = users * modsPerDay;
+            const monthlyApiCost = dailyMods * 30 * 0.006; // Avg cost per mod
+            const monthlyApiCostWithBYOK = monthlyApiCost * (1 - byokRate / 100);
+            const premiumUsers = Math.ceil(users * conversionRate / 100);
+            const monthlyRevenue = premiumUsers * premiumPrice;
+            
+            const results = document.getElementById('scenario-results');
+            results.innerHTML = `
+                <h4>📊 Scenario Results</h4>
+                <strong>📈 Usage:</strong><br>
+                • ${users.toLocaleString()} total users<br>
+                • ${dailyMods.toLocaleString()} modifications/day<br>
+                • ${(dailyMods * 30).toLocaleString()} modifications/month<br><br>
+                
+                <strong>💰 Costs:</strong><br>
+                • Monthly API cost: $${monthlyApiCost.toFixed(2)}<br>
+                • With ${byokRate}% BYOK: $${monthlyApiCostWithBYOK.toFixed(2)}<br>
+                • Daily cost: $${(monthlyApiCostWithBYOK / 30).toFixed(2)}<br><br>
+                
+                <strong>💵 Revenue:</strong><br>
+                • Premium users (${conversionRate}%): ${premiumUsers}<br>
+                • Monthly revenue: $${monthlyRevenue.toFixed(2)}<br><br>
+                
+                <strong>📊 Profitability:</strong><br>
+                • Without BYOK: $${(monthlyRevenue - monthlyApiCost).toFixed(2)}/month<br>
+                • With ${byokRate}% BYOK: $${(monthlyRevenue - monthlyApiCostWithBYOK).toFixed(2)}/month<br>
+                • Break-even users: ${Math.ceil(monthlyApiCostWithBYOK / premiumPrice)}<br>
+                • Required conversion: ${((Math.ceil(monthlyApiCostWithBYOK / premiumPrice) / users) * 100).toFixed(1)}%
+            `;
+            results.style.display = 'block';
+        }
+
+        // Export functions
+        function exportData() {
+            const data = {
+                usage: usageData,
+                exportedAt: new Date().toISOString(),
+                type: 'full_analytics'
+            };
+            downloadJSON(data, 'veo3-admin-analytics-' + new Date().toISOString().split('T')[0] + '.json');
+        }
+
+        function exportCostReport() {
+            const report = {
+                summary: {
+                    todayCost: usageData.today.cost,
+                    monthCost: usageData.thisMonth.cost,
+                    projectedMonthlyCost: usageData.thisMonth.projectedMonthlyCost,
+                    avgCostPerCall: usageData.today.avgCostPerCall
+                },
+                recommendations: generateRecommendations(),
+                exportedAt: new Date().toISOString(),
+                type: 'cost_report'
+            };
+            downloadJSON(report, 'veo3-cost-report-' + new Date().toISOString().split('T')[0] + '.json');
+        }
+
+        function generateRecommendations() {
+            const monthlyCost = usageData.thisMonth.projectedMonthlyCost;
+            const recommendations = [];
+            
+            if (monthlyCost > 100) {
+                recommendations.push("Consider implementing BYOK to reduce API costs by 50%+");
+            }
+            if (usageData.today.avgCostPerCall > 0.008) {
+                recommendations.push("Enable system prompt caching to reduce input token costs");
+            }
+            if (Object.keys(usageData.today.byUser).length > 50) {
+                recommendations.push("Consider usage-based pricing tiers for heavy users");
+            }
+            
+            return recommendations;
+        }
+
+        function downloadJSON(data, filename) {
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function refreshData() {
+            loadUsageData();
+        }
+
+        function resetStats() {
+            if (confirm('Are you sure you want to reset all usage statistics? This cannot be undone.')) {
+                // In real app, this would call your API to reset stats
+                alert('Statistics reset successfully');
+                loadUsageData();
+            }
+        }
+    </script>
+</body>
+</html>

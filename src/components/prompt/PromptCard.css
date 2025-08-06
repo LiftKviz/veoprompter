@@ -1,0 +1,103 @@
+.prompt-card {
+  background-color: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+
+.prompt-card:hover {
+  box-shadow: var(--shadow-1);
+}
+
+.prompt-header {
+  padding: 12px 16px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.prompt-title {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.expand-icon {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.prompt-content {
+  padding: 0 16px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.prompt-text {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin: 12px 0;
+}
+
+.prompt-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.action-button {
+  padding: 6px 12px;
+  font-size: 12px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.action-button:hover {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.action-button.disabled {
+  background-color: var(--surface);
+  color: var(--text-muted);
+  border-color: var(--border);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.action-button.disabled:hover {
+  background-color: var(--surface);
+  color: var(--text-muted);
+  border-color: var(--border);
+}
+
+.modify-section {
+  margin-top: 12px;
+}
+
+.modify-input {
+  width: 100%;
+  min-height: 60px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  resize: vertical;
+  margin-bottom: 8px;
+}
+
+.modify-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}

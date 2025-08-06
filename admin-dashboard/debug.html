@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Firebase</title>
+</head>
+<body>
+    <h1>Firebase Debug</h1>
+    <div id="log"></div>
+    <button id="test-config">1. Test Config</button>
+    <button id="test-auth">2. Test Auth</button>
+    <button id="test-signin">3. Test Sign In</button>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    
+    <script>
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            logDiv.innerHTML += '<div>' + new Date().toLocaleTimeString() + ': ' + message + '</div>';
+            console.log(message);
+        }
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCDsAJx-JUCuKC1-YR16N7APYpTh--SSLo",
+            authDomain: "videoprompter-d6a18.firebaseapp.com",
+            projectId: "videoprompter-d6a18",
+            storageBucket: "videoprompter-d6a18.firebasestorage.app",
+            messagingSenderId: "43646976330",
+            appId: "1:43646976330:web:6d57b38a3f6c98d4c2c1b3"
+        };
+
+        log('Starting Firebase debug...');
+
+        document.getElementById('test-config').addEventListener('click', () => {
+            log('Config test clicked');
+            log('API Key: ' + firebaseConfig.apiKey.substring(0, 10) + '...');
+            log('Auth Domain: ' + firebaseConfig.authDomain);
+            log('Project ID: ' + firebaseConfig.projectId);
+        });
+
+        document.getElementById('test-auth').addEventListener('click', () => {
+            log('Auth test clicked');
+            try {
+                firebase.initializeApp(firebaseConfig);
+                log('✅ Firebase initialized');
+                
+                const auth = firebase.auth();
+                log('✅ Auth service created');
+                
+                auth.onAuthStateChanged((user) => {
+                    if (user) {
+                        log('✅ User signed in: ' + user.email);
+                    } else {
+                        log('ℹ️ No user signed in');
+                    }
+                });
+                
+            } catch (error) {
+                log('❌ Firebase init error: ' + error.message);
+            }
+        });
+
+        document.getElementById('test-signin').addEventListener('click', async () => {
+            log('Sign-in test clicked');
+            try {
+                const auth = firebase.auth();
+                const provider = new firebase.auth.GoogleAuthProvider();
+                
+                log('Attempting Google sign-in...');
+                const result = await auth.signInWithPopup(provider);
+                log('✅ Sign-in successful: ' + result.user.email);
+                
+            } catch (error) {
+                log('❌ Sign-in error: ' + error.code + ' - ' + error.message);
+            }
+        });
+
+        // Auto-start
+        window.onload = () => {
+            log('Page loaded, click buttons to test');
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Firebase Auth Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    .info {
+      background: #e3f2fd;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 10px 0;
+    }
+    .error {
+      background: #ffebee;
+      color: #c62828;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 10px 0;
+    }
+    .success {
+      background: #e8f5e9;
+      color: #2e7d32;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 10px 0;
+    }
+    button {
+      background: #1976d2;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 10px 0;
+    }
+    button:hover {
+      background: #1565c0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Firebase Authentication Test</h1>
+  
+  <div class="info">
+    <h3>Current Environment:</h3>
+    <p><strong>Domain:</strong> <span id="domain"></span></p>
+    <p><strong>Protocol:</strong> <span id="protocol"></span></p>
+    <p><strong>Auth Domain:</strong> videoprompter-d6a18.firebaseapp.com</p>
+  </div>
+  
+  <div id="status" class="info">Checking Firebase configuration...</div>
+  
+  <button id="test-auth">Test Google Sign-In</button>
+  
+  <div id="results"></div>
+  
+  <h3>Troubleshooting Steps:</h3>
+  <ol>
+    <li>Check browser console for errors (F12)</li>
+    <li>Ensure popups are allowed for this domain</li>
+    <li>Verify domain is added to Firebase authorized domains</li>
+    <li>Clear browser cache and cookies</li>
+  </ol>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+  
+  <script>
+    // Display current environment
+    document.getElementById('domain').textContent = window.location.hostname;
+    document.getElementById('protocol').textContent = window.location.protocol;
+    
+    const statusDiv = document.getElementById('status');
+    const resultsDiv = document.getElementById('results');
+    
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyCDsAJx-JUCuKC1-YR16N7APYpTh--SSLo",
+      authDomain: "videoprompter-d6a18.firebaseapp.com",
+      projectId: "videoprompter-d6a18",
+      storageBucket: "videoprompter-d6a18.firebasestorage.app",
+      messagingSenderId: "43646976330",
+      appId: "1:43646976330:web:6d57b38a3f6c98d4c2c1b3"
+    };
+    
+    // Initialize Firebase
+    try {
+      firebase.initializeApp(firebaseConfig);
+      statusDiv.className = 'success';
+      statusDiv.innerHTML = '✅ Firebase initialized successfully!';
+    } catch (error) {
+      statusDiv.className = 'error';
+      statusDiv.innerHTML = '❌ Firebase initialization failed: ' + error.message;
+    }
+    
+    // Test authentication
+    document.getElementById('test-auth').addEventListener('click', async () => {
+      resultsDiv.innerHTML = '<div class="info">Testing authentication...</div>';
+      
+      try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        const result = await firebase.auth().signInWithPopup(provider);
+        
+        resultsDiv.innerHTML = `
+          <div class="success">
+            <h3>✅ Authentication Successful!</h3>
+            <p><strong>User:</strong> ${result.user.email}</p>
+            <p><strong>UID:</strong> ${result.user.uid}</p>
+          </div>
+        `;
+        
+        // Sign out after test
+        setTimeout(() => {
+          firebase.auth().signOut();
+          resultsDiv.innerHTML += '<div class="info">Signed out after test.</div>';
+        }, 3000);
+        
+      } catch (error) {
+        resultsDiv.innerHTML = `
+          <div class="error">
+            <h3>❌ Authentication Failed</h3>
+            <p><strong>Error Code:</strong> ${error.code}</p>
+            <p><strong>Error Message:</strong> ${error.message}</p>
+            ${error.code === 'auth/unauthorized-domain' ? 
+              '<p><strong>Solution:</strong> Add this domain to Firebase Console → Authentication → Settings → Authorized domains</p>' : ''}
+          </div>
+        `;
+      }
+    });
+  </script>
+</body>
+</html>

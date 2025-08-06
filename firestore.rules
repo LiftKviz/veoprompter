@@ -1,0 +1,86 @@
+// Firebase Security Rules for Veo 3 Chrome Extension
+// These rules ensure only authenticated users can access their own data
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users can only access their own user document
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Validate user data structure
+      allow create: if request.auth != null 
+        && request.auth.uid == userId
+        && validateUserData(request.resource.data);
+      
+      allow update: if request.auth != null 
+        && request.auth.uid == userId
+        && validateUserData(request.resource.data);
+    }
+    
+    // User prompts - only accessible by the owner
+    match /user-prompts/{promptId} {
+      allow read, write: if request.auth != null 
+        && request.auth.uid == resource.data.userId;
+      
+      allow create: if request.auth != null 
+        && request.auth.uid == request.resource.data.userId
+        && validatePromptData(request.resource.data);
+    }
+    
+    // User sequences - only accessible by the owner
+    match /user-sequences/{sequenceId} {
+      allow read, write: if request.auth != null 
+        && request.auth.uid == resource.data.userId;
+      
+      allow create: if request.auth != null 
+        && request.auth.uid == request.resource.data.userId
+        && validateSequenceData(request.resource.data);
+    }
+    
+    // Public prompts (read-only for all users)
+    match /public-prompts/{promptId} {
+      allow read: if true; // Public read access
+      allow write: if false; // No write access (admin only via server)
+    }
+    
+    // Admin access (for managing public prompts)
+    match /admin/{adminId} {
+      allow read, write: if request.auth != null 
+        && request.auth.token.admin == true;
+    }
+    
+    // All other documents are denied
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+  
+  // Validation functions
+  function validateUserData(data) {
+    return data.keys().hasAll(['email', 'name', 'createdAt']) &&
+           data.email is string &&
+           data.name is string &&
+           data.createdAt is timestamp;
+  }
+  
+  function validatePromptData(data) {
+    return data.keys().hasAll(['userId', 'title', 'content', 'createdAt']) &&
+           data.userId is string &&
+           data.title is string &&
+           data.content is string &&
+           data.createdAt is timestamp &&
+           data.title.size() <= 200 &&
+           data.content.size() <= 5000;
+  }
+  
+  function validateSequenceData(data) {
+    return data.keys().hasAll(['userId', 'name', 'prompts', 'createdAt']) &&
+           data.userId is string &&
+           data.name is string &&
+           data.prompts is list &&
+           data.createdAt is timestamp &&
+           data.name.size() <= 100 &&
+           data.prompts.size() <= 50;
+  }
+}

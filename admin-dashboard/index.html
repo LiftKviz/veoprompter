@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Veo 3 Prompt Admin Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .header {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .header h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .auth-section {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-top: 10px;
+    }
+    .auth-status {
+      font-size: 14px;
+      color: #666;
+    }
+    .main-content {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 20px;
+    }
+    .sidebar {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      height: fit-content;
+    }
+    .content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .category-list {
+      list-style: none;
+    }
+    .category-item {
+      padding: 10px 15px;
+      margin: 5px 0;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid #e0e0e0;
+    }
+    .category-item:hover {
+      background: #f0f0f0;
+      border-color: #3b82f6;
+    }
+    .category-item.active {
+      background: #3b82f6;
+      color: white;
+      border-color: #3b82f6;
+    }
+    .prompt-list {
+      max-height: 600px;
+      overflow-y: auto;
+    }
+    .prompt-item {
+      background: #f8f9fa;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      border: 1px solid #e0e0e0;
+    }
+    .prompt-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .prompt-title {
+      font-weight: 500;
+      font-size: 16px;
+    }
+    .prompt-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: #3b82f6;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #2563eb;
+    }
+    .btn-secondary {
+      background: white;
+      border: 1px solid #e0e0e0;
+    }
+    .btn-secondary:hover {
+      background: #f8f9fa;
+    }
+    .btn-danger {
+      background: #dc2626;
+      color: white;
+    }
+    .btn-danger:hover {
+      background: #b91c1c;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal.show {
+      display: flex;
+    }
+    .modal-content {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+    .form-control {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    textarea.form-control {
+      resize: vertical;
+      min-height: 150px;
+    }
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+    .add-prompt-btn {
+      background: #10b981;
+      color: white;
+      padding: 10px 20px;
+      margin-bottom: 20px;
+    }
+    .add-prompt-btn:hover {
+      background: #059669;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+      text-align: center;
+    }
+    .stat-number {
+      font-size: 24px;
+      font-weight: bold;
+      color: #3b82f6;
+    }
+    .stat-label {
+      font-size: 14px;
+      color: #666;
+      margin-top: 5px;
+    }
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+    .error {
+      background: #fee2e2;
+      color: #dc2626;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
+    .success {
+      background: #d1fae5;
+      color: #059669;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
+    .prompt-preview {
+      background: #f8f9fa;
+      padding: 10px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #666;
+      margin-top: 5px;
+      max-height: 100px;
+      overflow-y: auto;
+    }
+    .export-import {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .variable-helper {
+      margin-top: 10px;
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+    .variable-btn {
+      padding: 4px 8px;
+      background: #e3f2fd;
+      border: 1px solid #1976d2;
+      color: #1976d2;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .variable-btn:hover {
+      background: #1976d2;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Veo 3 Prompt Assistant - Admin Dashboard</h1>
+      <div class="auth-section">
+        <span class="auth-status" id="auth-status">Not authenticated</span>
+        <button class="btn btn-primary" id="auth-btn">Sign In</button>
+      </div>
+    </div>
+
+    <div id="main-content" class="main-content" style="display: none;">
+      <div class="sidebar">
+        <h3>Categories</h3>
+        <ul class="category-list" id="category-list">
+          <li class="category-item active" data-category="all">All Prompts</li>
+          <li class="category-item" data-category="ads">Ads</li>
+          <li class="category-item" data-category="storytelling">Storytelling</li>
+          <li class="category-item" data-category="tutorial">Tutorial</li>
+          <li class="category-item" data-category="vlogging">Vlogging</li>
+          <li class="category-item" data-category="street-interview">Street Interview</li>
+          <li class="category-item" data-category="tech-influencer">Tech Influencer</li>
+          <li class="category-item" data-category="mobile-game">Mobile Game</li>
+        </ul>
+      </div>
+
+      <div class="content">
+        <div class="stats">
+          <div class="stat-card">
+            <div class="stat-number" id="total-prompts">0</div>
+            <div class="stat-label">Total Prompts</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="total-categories">7</div>
+            <div class="stat-label">Categories</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="last-updated">-</div>
+            <div class="stat-label">Last Updated</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="active-users">-</div>
+            <div class="stat-label">Active Users</div>
+          </div>
+        </div>
+
+        <div class="export-import">
+          <button class="btn btn-secondary" id="export-btn">📥 Export All</button>
+          <button class="btn btn-secondary" id="import-btn">📤 Import</button>
+          <button class="btn btn-primary" id="import-existing-btn">🚀 Import Existing Prompts</button>
+          <input type="file" id="import-file" style="display: none;" accept=".json">
+        </div>
+
+        <button class="btn add-prompt-btn" id="add-prompt-btn">+ Add New Prompt</button>
+
+        <div id="message-area"></div>
+
+        <div id="prompt-list" class="prompt-list">
+          <div class="loading">Loading prompts...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit/Add Prompt Modal -->
+  <div id="prompt-modal" class="modal">
+    <div class="modal-content">
+      <h2 id="modal-title">Add New Prompt</h2>
+      <form id="prompt-form">
+        <div class="form-group">
+          <label for="prompt-category">Category</label>
+          <select class="form-control" id="prompt-category" required>
+            <option value="ads">Ads</option>
+            <option value="storytelling">Storytelling</option>
+            <option value="tutorial">Tutorial</option>
+            <option value="vlogging">Vlogging</option>
+            <option value="street-interview">Street Interview</option>
+            <option value="tech-influencer">Tech Influencer</option>
+            <option value="mobile-game">Mobile Game</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="prompt-title">Title</label>
+          <input type="text" class="form-control" id="prompt-title" required>
+        </div>
+        <div class="form-group">
+          <label for="prompt-content">Prompt Content</label>
+          <textarea class="form-control" id="prompt-content" rows="8" required placeholder="Use {variable} for custom fields. Example: {product_name}, {location}, {character_name}"></textarea>
+          <small style="color: #666; margin-top: 5px; display: block;">Tip: Variables in curly braces will become input fields for users</small>
+          <div class="variable-helper">
+            <button type="button" class="variable-btn" onclick="insertVariable('product_name')">+ Product Name</button>
+            <button type="button" class="variable-btn" onclick="insertVariable('character_name')">+ Character Name</button>
+            <button type="button" class="variable-btn" onclick="insertVariable('location')">+ Location</button>
+            <button type="button" class="variable-btn" onclick="insertVariable('action')">+ Action</button>
+            <button type="button" class="variable-btn" onclick="insertVariable('style')">+ Style</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="prompt-fields">Custom Fields (JSON)</label>
+          <textarea class="form-control" id="prompt-fields" rows="4" placeholder='[
+  {"name": "product_name", "label": "Product Name", "type": "text"},
+  {"name": "color", "label": "Color", "type": "text"}
+]'></textarea>
+          <small style="color: #666; margin-top: 5px; display: block;">Define custom fields that users can fill in. Leave empty for no fields.</small>
+        </div>
+        <div class="form-group">
+          <label>Prompt Preview</label>
+          <div id="prompt-preview" class="prompt-preview" style="background: #f8f9fa; padding: 10px; border-radius: 4px; min-height: 50px;">
+            <span style="color: #999;">Enter prompt content to see preview...</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="prompt-youtube">YouTube Link (optional)</label>
+          <input type="url" class="form-control" id="prompt-youtube" placeholder="https://youtube.com/watch?v=...">
+        </div>
+        <div class="form-group">
+          <label for="prompt-order">Order (optional)</label>
+          <input type="number" class="form-control" id="prompt-order" min="0" placeholder="Display order within category">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="cancel-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Prompt</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs - Updated to latest version -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  
+  <!-- Admin Dashboard Scripts -->
+  <script src="firebase-init.js"></script>
+  <script src="prompts-data.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

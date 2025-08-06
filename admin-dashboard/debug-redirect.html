@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Firebase Auth - Redirect Method</title>
+</head>
+<body>
+    <h1>Firebase Auth Test - Redirect</h1>
+    <div id="log"></div>
+    <button id="signin-redirect">Sign In (Redirect)</button>
+    <button id="signout">Sign Out</button>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    
+    <script>
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            logDiv.innerHTML += '<div>' + new Date().toLocaleTimeString() + ': ' + message + '</div>';
+            console.log(message);
+        }
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCDsAJx-JUCuKC1-YR16N7APYpTh--SSLo",
+            authDomain: "videoprompter-d6a18.firebaseapp.com",
+            projectId: "videoprompter-d6a18",
+            storageBucket: "videoprompter-d6a18.firebasestorage.app",
+            messagingSenderId: "43646976330",
+            appId: "1:43646976330:web:6d57b38a3f6c98d4c2c1b3"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        // Check for redirect result on page load
+        auth.getRedirectResult().then((result) => {
+            if (result.user) {
+                log('✅ Signed in via redirect: ' + result.user.email);
+            }
+        }).catch((error) => {
+            log('❌ Redirect error: ' + error.message);
+        });
+
+        // Listen for auth state changes
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                log('✅ User is signed in: ' + user.email);
+                document.getElementById('signin-redirect').style.display = 'none';
+                document.getElementById('signout').style.display = 'inline';
+            } else {
+                log('ℹ️ User is signed out');
+                document.getElementById('signin-redirect').style.display = 'inline';
+                document.getElementById('signout').style.display = 'none';
+            }
+        });
+
+        // Sign in with redirect
+        document.getElementById('signin-redirect').addEventListener('click', () => {
+            log('Starting redirect sign-in...');
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithRedirect(provider);
+        });
+
+        // Sign out
+        document.getElementById('signout').addEventListener('click', () => {
+            auth.signOut().then(() => {
+                log('✅ Signed out');
+            });
+        });
+
+        log('Page loaded - ready to test redirect auth');
+    </script>
+</body>
+</html>

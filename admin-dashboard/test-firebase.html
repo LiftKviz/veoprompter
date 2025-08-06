@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Firebase Connection Test</title>
+</head>
+<body>
+    <h1>Firebase Connection Test</h1>
+    <button id="test-btn">Test Firebase Connection</button>
+    <div id="result"></div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCDsAJx-JUCuKC1-YR16N7APYpTh--SSLo",
+            authDomain: "videoprompter-d6a18.firebaseapp.com",
+            projectId: "videoprompter-d6a18",
+            storageBucket: "videoprompter-d6a18.firebasestorage.app",
+            messagingSenderId: "43646976330",
+            appId: "1:43646976330:web:6d57b38a3f6c98d4c2c1b3"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        document.getElementById('test-btn').addEventListener('click', async () => {
+            const result = document.getElementById('result');
+            result.innerHTML = 'Testing...';
+            
+            try {
+                // Test Firestore connection
+                const testDoc = await db.collection('test').doc('connection').get();
+                result.innerHTML += '<br>✅ Firestore connection: OK';
+                
+                // Test Auth with Google
+                const provider = new firebase.auth.GoogleAuthProvider();
+                const authResult = await auth.signInWithPopup(provider);
+                result.innerHTML += '<br>✅ Google Auth: ' + authResult.user.email;
+                
+            } catch (error) {
+                result.innerHTML += '<br>❌ Error: ' + error.message;
+                console.error('Firebase test error:', error);
+            }
+        });
+    </script>
+</body>
+</html>

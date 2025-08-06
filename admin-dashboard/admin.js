@@ -1,0 +1,489 @@
+// Admin Dashboard for Veo 3 Prompt Assistant
+// Firebase should already be initialized by firebase-init.js
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// Set auth persistence
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+  .catch((error) => {
+    console.error('Error setting persistence:', error);
+  });
+
+// State
+let currentUser = null;
+let prompts = [];
+let currentCategory = 'all';
+let editingPromptId = null;
+
+// DOM Elements
+const authBtn = document.getElementById('auth-btn');
+const authStatus = document.getElementById('auth-status');
+const mainContent = document.getElementById('main-content');
+const promptList = document.getElementById('prompt-list');
+const categoryList = document.getElementById('category-list');
+const addPromptBtn = document.getElementById('add-prompt-btn');
+const promptModal = document.getElementById('prompt-modal');
+const promptForm = document.getElementById('prompt-form');
+const modalTitle = document.getElementById('modal-title');
+const cancelBtn = document.getElementById('cancel-btn');
+const messageArea = document.getElementById('message-area');
+const totalPromptsEl = document.getElementById('total-prompts');
+const lastUpdatedEl = document.getElementById('last-updated');
+const exportBtn = document.getElementById('export-btn');
+const importBtn = document.getElementById('import-btn');
+const importFile = document.getElementById('import-file');
+const importExistingBtn = document.getElementById('import-existing-btn');
+
+// Authentication
+authBtn.addEventListener('click', async () => {
+  if (currentUser) {
+    await auth.signOut();
+  } else {
+    // Use Google Sign-In
+    const provider = new firebase.auth.GoogleAuthProvider();
+    try {
+      await auth.signInWithPopup(provider);
+    } catch (error) {
+      console.error('Auth error:', error);
+      
+      // Handle specific errors
+      if (error.code === 'auth/unauthorized-domain') {
+        showMessage('This domain is not authorized. Please contact the administrator to add this domain to Firebase.', 'error');
+      } else if (error.code === 'auth/popup-blocked') {
+        showMessage('Popup was blocked. Please allow popups for this site.', 'error');
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        showMessage('Authentication cancelled.', 'error');
+      } else {
+        showMessage('Authentication failed: ' + error.message, 'error');
+      }
+      
+      // Show additional debugging info
+      console.log('Current domain:', window.location.hostname);
+      console.log('Error code:', error.code);
+    }
+  }
+});
+
+auth.onAuthStateChanged((user) => {
+  currentUser = user;
+  if (user) {
+    authStatus.textContent = `Signed in as ${user.email}`;
+    authBtn.textContent = 'Sign Out';
+    mainContent.style.display = 'grid';
+    loadPrompts();
+    subscribeToPrompts();
+  } else {
+    authStatus.textContent = 'Not authenticated';
+    authBtn.textContent = 'Sign In';
+    mainContent.style.display = 'none';
+  }
+});
+
+// Load and subscribe to prompts
+function subscribeToPrompts() {
+  db.collection('prompts')
+    .orderBy('category')
+    .orderBy('order', 'asc')
+    .onSnapshot((snapshot) => {
+      prompts = [];
+      snapshot.forEach((doc) => {
+        prompts.push({
+          id: doc.id,
+          ...doc.data()
+        });
+      });
+      renderPrompts();
+      updateStats();
+    }, (error) => {
+      showMessage('Error loading prompts: ' + error.message, 'error');
+    });
+}
+
+async function loadPrompts() {
+  try {
+    const snapshot = await db.collection('prompts').get();
+    prompts = [];
+    snapshot.forEach((doc) => {
+      prompts.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+    renderPrompts();
+    updateStats();
+  } catch (error) {
+    showMessage('Error loading prompts: ' + error.message, 'error');
+  }
+}
+
+// Render prompts
+function renderPrompts() {
+  const filteredPrompts = currentCategory === 'all' 
+    ? prompts 
+    : prompts.filter(p => p.category === currentCategory);
+
+  if (filteredPrompts.length === 0) {
+    promptList.innerHTML = '<div class="loading">No prompts found</div>';
+    return;
+  }
+
+  promptList.innerHTML = filteredPrompts.map(prompt => `
+    <div class="prompt-item">
+      <div class="prompt-header">
+        <div>
+          <div class="prompt-title">${escapeHtml(prompt.title)}</div>
+          <span style="font-size: 12px; color: #666;">Category: ${prompt.category}</span>
+        </div>
+        <div class="prompt-actions">
+          <button class="btn btn-secondary" onclick="editPrompt('${prompt.id}')">Edit</button>
+          <button class="btn btn-danger" onclick="deletePrompt('${prompt.id}')">Delete</button>
+        </div>
+      </div>
+      <div class="prompt-preview">${escapeHtml(prompt.prompt)}</div>
+      ${prompt.customFields && prompt.customFields.length > 0 ? `<div style="margin-top: 5px; font-size: 12px; color: #666;">Custom fields: ${prompt.customFields.map(f => f.label).join(', ')}</div>` : ''}
+      ${prompt.youtubeLink ? `<div style="margin-top: 5px; font-size: 12px;"><a href="${prompt.youtubeLink}" target="_blank">🔗 YouTube Link</a></div>` : ''}
+    </div>
+  `).join('');
+}
+
+// Category selection
+categoryList.addEventListener('click', (e) => {
+  if (e.target.classList.contains('category-item')) {
+    document.querySelectorAll('.category-item').forEach(item => {
+      item.classList.remove('active');
+    });
+    e.target.classList.add('active');
+    currentCategory = e.target.dataset.category;
+    renderPrompts();
+  }
+});
+
+// Add/Edit prompt
+addPromptBtn.addEventListener('click', () => {
+  editingPromptId = null;
+  modalTitle.textContent = 'Add New Prompt';
+  promptForm.reset();
+  // Add default custom fields template
+  document.getElementById('prompt-fields').value = `[
+  {"name": "example_field", "label": "Example Field", "type": "text"}
+]`;
+  promptModal.classList.add('show');
+});
+
+window.editPrompt = async (id) => {
+  editingPromptId = id;
+  modalTitle.textContent = 'Edit Prompt';
+  const prompt = prompts.find(p => p.id === id);
+  
+  if (prompt) {
+    document.getElementById('prompt-category').value = prompt.category;
+    document.getElementById('prompt-title').value = prompt.title;
+    document.getElementById('prompt-content').value = prompt.prompt;
+    document.getElementById('prompt-youtube').value = prompt.youtubeLink || '';
+    document.getElementById('prompt-order').value = prompt.order || '';
+    document.getElementById('prompt-fields').value = prompt.customFields ? JSON.stringify(prompt.customFields, null, 2) : '';
+    promptModal.classList.add('show');
+    updatePreview(); // Update preview when editing
+  }
+};
+
+window.deletePrompt = async (id) => {
+  if (confirm('Are you sure you want to delete this prompt?')) {
+    try {
+      await db.collection('prompts').doc(id).delete();
+      showMessage('Prompt deleted successfully', 'success');
+    } catch (error) {
+      showMessage('Error deleting prompt: ' + error.message, 'error');
+    }
+  }
+};
+
+// Form submission
+promptForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  // Parse custom fields
+  let customFields = [];
+  const fieldsValue = document.getElementById('prompt-fields').value.trim();
+  if (fieldsValue) {
+    try {
+      customFields = JSON.parse(fieldsValue);
+      // Validate custom fields
+      if (!Array.isArray(customFields)) {
+        throw new Error('Custom fields must be an array');
+      }
+      customFields.forEach(field => {
+        if (!field.name || !field.label) {
+          throw new Error('Each field must have name and label');
+        }
+      });
+    } catch (error) {
+      showMessage('Invalid custom fields JSON: ' + error.message, 'error');
+      return;
+    }
+  }
+
+  const promptData = {
+    category: document.getElementById('prompt-category').value,
+    title: document.getElementById('prompt-title').value,
+    prompt: document.getElementById('prompt-content').value,
+    youtubeLink: document.getElementById('prompt-youtube').value || null,
+    order: parseInt(document.getElementById('prompt-order').value) || 0,
+    customFields: customFields.length > 0 ? customFields : null,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    updatedBy: currentUser.email
+  };
+
+  try {
+    if (editingPromptId) {
+      await db.collection('prompts').doc(editingPromptId).update(promptData);
+      showMessage('Prompt updated successfully', 'success');
+    } else {
+      promptData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      promptData.createdBy = currentUser.email;
+      await db.collection('prompts').add(promptData);
+      showMessage('Prompt added successfully', 'success');
+    }
+    promptModal.classList.remove('show');
+    promptForm.reset();
+  } catch (error) {
+    showMessage('Error saving prompt: ' + error.message, 'error');
+  }
+});
+
+// Modal controls
+cancelBtn.addEventListener('click', () => {
+  promptModal.classList.remove('show');
+  promptForm.reset();
+});
+
+promptModal.addEventListener('click', (e) => {
+  if (e.target === promptModal) {
+    promptModal.classList.remove('show');
+    promptForm.reset();
+  }
+});
+
+// Export/Import functionality
+exportBtn.addEventListener('click', () => {
+  const data = {
+    version: '1.0',
+    exportDate: new Date().toISOString(),
+    prompts: prompts
+  };
+  
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `veo3-prompts-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+importBtn.addEventListener('click', () => {
+  importFile.click();
+});
+
+importFile.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    
+    if (!data.prompts || !Array.isArray(data.prompts)) {
+      throw new Error('Invalid file format');
+    }
+    
+    if (confirm(`Import ${data.prompts.length} prompts? This will not delete existing prompts.`)) {
+      const batch = db.batch();
+      
+      data.prompts.forEach(prompt => {
+        const docRef = db.collection('prompts').doc();
+        batch.set(docRef, {
+          ...prompt,
+          id: undefined, // Remove old ID
+          importedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          importedBy: currentUser.email
+        });
+      });
+      
+      await batch.commit();
+      showMessage(`Successfully imported ${data.prompts.length} prompts`, 'success');
+    }
+  } catch (error) {
+    showMessage('Error importing file: ' + error.message, 'error');
+  }
+  
+  importFile.value = '';
+});
+
+// Import existing prompts from prompts.txt
+importExistingBtn.addEventListener('click', async () => {
+  if (!currentUser) {
+    showMessage('Please sign in to import prompts', 'error');
+    return;
+  }
+  
+  // Check if parsedPrompts is available from import-prompts.js
+  if (!window.parsedPrompts) {
+    showMessage('Import script not loaded properly', 'error');
+    return;
+  }
+  
+  const confirmImport = confirm(`This will import ${window.parsedPrompts.length} prompts from the original prompts.txt file. Continue?`);
+  if (!confirmImport) return;
+  
+  try {
+    importExistingBtn.disabled = true;
+    importExistingBtn.textContent = 'Importing...';
+    
+    const batch = db.batch();
+    let successCount = 0;
+    
+    // Add each prompt to the batch
+    window.parsedPrompts.forEach(prompt => {
+      const docRef = db.collection('prompts').doc();
+      batch.set(docRef, {
+        ...prompt,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        createdBy: currentUser.email,
+        updatedBy: currentUser.email
+      });
+      successCount++;
+    });
+    
+    // Commit the batch
+    await batch.commit();
+    
+    showMessage(`Successfully imported ${successCount} prompts!`, 'success');
+    
+    // Reset button
+    importExistingBtn.textContent = '🚀 Import Existing Prompts';
+    importExistingBtn.disabled = false;
+    
+  } catch (error) {
+    console.error('Import error:', error);
+    showMessage('Error importing prompts: ' + error.message, 'error');
+    importExistingBtn.textContent = '🚀 Import Existing Prompts';
+    importExistingBtn.disabled = false;
+  }
+});
+
+// Update stats
+function updateStats() {
+  totalPromptsEl.textContent = prompts.length;
+  
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('en-US', { 
+    hour: '2-digit', 
+    minute: '2-digit' 
+  });
+  lastUpdatedEl.textContent = timeStr;
+}
+
+// Utility functions
+function showMessage(message, type = 'info') {
+  messageArea.innerHTML = `<div class="${type}">${message}</div>`;
+  setTimeout(() => {
+    messageArea.innerHTML = '';
+  }, 5000);
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Preview functionality
+const promptContentEl = document.getElementById('prompt-content');
+const promptFieldsEl = document.getElementById('prompt-fields');
+const promptPreviewEl = document.getElementById('prompt-preview');
+
+function updatePreview() {
+  let content = promptContentEl.value;
+  
+  if (!content) {
+    promptPreviewEl.innerHTML = '<span style="color: #999;">Enter prompt content to see preview...</span>';
+    return;
+  }
+  
+  // Parse custom fields and replace placeholders
+  try {
+    const fieldsValue = promptFieldsEl.value.trim();
+    if (fieldsValue) {
+      const fields = JSON.parse(fieldsValue);
+      fields.forEach(field => {
+        const placeholder = `{${field.name}}`;
+        const replacement = `<span style="background: #e3f2fd; padding: 2px 6px; border-radius: 3px; color: #1976d2;">[${field.label}]</span>`;
+        content = content.replace(new RegExp(placeholder, 'g'), replacement);
+      });
+    }
+  } catch (e) {
+    // Ignore JSON parse errors for preview
+  }
+  
+  promptPreviewEl.innerHTML = escapeHtml(content).replace(/\[([^\]]+)\]/g, '<span style="background: #e3f2fd; padding: 2px 6px; border-radius: 3px; color: #1976d2;">[$1]</span>');
+}
+
+promptContentEl.addEventListener('input', updatePreview);
+promptFieldsEl.addEventListener('input', updatePreview);
+
+// Helper function to insert variables
+window.insertVariable = (variableName) => {
+  const textarea = promptContentEl;
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const text = textarea.value;
+  const variable = `{${variableName}}`;
+  
+  textarea.value = text.substring(0, start) + variable + text.substring(end);
+  textarea.selectionStart = textarea.selectionEnd = start + variable.length;
+  textarea.focus();
+  
+  // Update the custom fields JSON if not already present
+  try {
+    let fields = [];
+    const fieldsValue = promptFieldsEl.value.trim();
+    if (fieldsValue) {
+      fields = JSON.parse(fieldsValue);
+    }
+    
+    // Check if this field already exists
+    if (!fields.find(f => f.name === variableName)) {
+      // Add the field with a nice label
+      const label = variableName.split('_').map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1)
+      ).join(' ');
+      
+      fields.push({
+        name: variableName,
+        label: label,
+        type: 'text'
+      });
+      
+      promptFieldsEl.value = JSON.stringify(fields, null, 2);
+    }
+  } catch (e) {
+    console.error('Error updating fields:', e);
+  }
+  
+  updatePreview();
+};
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+  // Check if Firebase config is set
+  if (firebaseConfig.apiKey === 'YOUR_API_KEY') {
+    messageArea.innerHTML = `
+      <div class="error">
+        <strong>Firebase not configured!</strong><br>
+        Please update the firebaseConfig in admin.js with your Firebase project credentials.
+      </div>
+    `;
+  }
+});

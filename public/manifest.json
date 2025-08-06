@@ -1,0 +1,53 @@
+{
+  "manifest_version": 3,
+  "name": "Veo 3 Prompt Assistant",
+  "version": "1.0.0",
+  "description": "Discover and manage prompt templates for Veo 3 video creation",
+  "permissions": [
+    "storage",
+    "clipboardWrite",
+    "identity",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://api.openai.com/*",
+    "https://www.googleapis.com/*",
+    "https://accounts.google.com/*",
+    "https://extensionpay.com/*"
+  ],
+  "oauth2": {
+    "client_id": "43646976330-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/userinfo.email",
+      "https://www.googleapis.com/auth/userinfo.profile"
+    ]
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.svg",
+      "32": "icons/icon32.svg",
+      "48": "icons/icon48.svg",
+      "128": "icons/icon128.svg"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.svg",
+    "32": "icons/icon32.svg",
+    "48": "icons/icon48.svg",
+    "128": "icons/icon128.svg"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://veo.google.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'self';"
+  }
+}

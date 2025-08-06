@@ -1,0 +1,21 @@
+<svg width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad32" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow32" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="1" dy="1" stdDeviation="1" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="16" cy="16" r="15" fill="url(#grad32)" stroke="#4c51bf" stroke-width="2" filter="url(#shadow32)"/>
+  
+  <!-- Play button triangle -->
+  <polygon points="12,10 12,22 22,16" fill="white" stroke="none" filter="url(#shadow32)"/>
+  
+  <!-- Small "3" indicator -->
+  <circle cx="24" cy="8" r="5" fill="#f56565" stroke="white" stroke-width="1"/>
+  <text x="24" y="10" font-family="Arial, sans-serif" font-size="6px" font-weight="bold" fill="white" text-anchor="middle">3</text>
+</svg>

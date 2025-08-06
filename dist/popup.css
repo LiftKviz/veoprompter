@@ -1,0 +1,60 @@
+/* Veo 3 Prompt Assistant - Main Styles */
+/* Most styles are embedded in popup.js for better performance */
+
+/* Base styles for better cross-browser compatibility */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  width: 400px;
+  height: 700px;
+  overflow: hidden;
+  border-radius: 12px;
+  
+  /* Night mode as default */
+  background: #1a1a1a;
+  color: #e0e0e0;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+/* Loading state */
+.loading-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
