@@ -73,6 +73,11 @@ module.exports = {
           from: 'admin-dashboard/prompts-data.js',
           to: 'admin-dashboard/prompts-data.js',
           noErrorOnMissing: true
+        },
+        {
+          from: 'admin-dashboard/prompts-data.json',
+          to: 'admin-dashboard/prompts-data.json',
+          noErrorOnMissing: true
         }
       ]
     }),

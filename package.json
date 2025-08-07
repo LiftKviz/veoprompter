@@ -12,6 +12,7 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
     "video": "remotion studio src/remotion/index.tsx --public-dir=public-remotion",
     "video:render": "remotion render src/remotion/index.tsx VeoPromo out/veo-promo.mp4 --public-dir=public-remotion",
+    "convert:admin": "node convert-admin-data.js",
     "deploy:prepare": "node deploy-admin.js",
     "deploy:admin": "npm run deploy:prepare && echo 'Admin dashboard ready - deploy admin-dashboard folder to Netlify'"
   },

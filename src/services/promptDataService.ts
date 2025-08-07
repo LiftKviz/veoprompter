@@ -80,19 +80,21 @@ class PromptDataService {
    */
   async loadFromAdminDashboard(): Promise<Prompt[]> {
     try {
-      // Try to load the admin dashboard prompts data
-      const response = await fetch('/admin-dashboard/prompts-data.js');
-      const scriptText = await response.text();
+      // Try to load the admin dashboard prompts JSON data
+      const response = await fetch('/admin-dashboard/prompts-data.json');
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
       
-      // Extract the prompts data from the script
-      const match = scriptText.match(/const\s+parsedPrompts\s*=\s*(\[[\s\S]*?\]);/);
-      if (match && match[1]) {
-        // Parse the JavaScript array
-        const promptsData = eval(match[1]) as AdminPrompt[];
+      const jsonData = await response.json();
+      console.log('Fetched admin dashboard JSON data');
+      
+      if (jsonData && jsonData.prompts && Array.isArray(jsonData.prompts)) {
+        const promptsData = jsonData.prompts as AdminPrompt[];
         console.log(`Loaded ${promptsData.length} prompts from admin dashboard`);
         
         this.prompts = promptsData.map((p, index) => ({
-          id: `prompt-${index + 1}`,
+          id: `admin-${index + 1}`,
           category: p.category as CategoryType,
           title: p.title,
           prompt: p.prompt,
@@ -105,7 +107,8 @@ class PromptDataService {
         return this.prompts;
       }
     } catch (error) {
-      console.warn('Failed to load admin dashboard prompts:', error);
+      console.warn('Failed to load admin dashboard JSON prompts:', error);
+      console.log('Falling back to prompts.txt');
     }
 
     // Fallback to loading from prompts.txt
