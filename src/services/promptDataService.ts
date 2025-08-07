@@ -1,9 +1,10 @@
 /**
  * Prompt Data Service
- * Loads prompts from admin dashboard or Firebase
+ * Loads prompts from admin dashboard, Firebase, or local file
  */
 
 import { Prompt, CategoryType } from '@/types';
+import { firebaseService } from './firebaseService';
 
 export interface AdminPrompt {
   category: string;
@@ -17,6 +18,62 @@ export interface AdminPrompt {
 class PromptDataService {
   private prompts: Prompt[] = [];
   private loaded = false;
+  private unsubscribe: (() => void) | null = null;
+
+  /**
+   * Initialize and load prompts from best available source
+   */
+  async initialize(): Promise<Prompt[]> {
+    // First try Firebase if enabled
+    const firebaseEnabled = await firebaseService.isFirebaseEnabled();
+    if (firebaseEnabled) {
+      const firebasePrompts = await this.loadFromFirebase();
+      if (firebasePrompts.length > 0) {
+        return firebasePrompts;
+      }
+    }
+
+    // Then try admin dashboard
+    const adminPrompts = await this.loadFromAdminDashboard();
+    if (adminPrompts.length > 0) {
+      return adminPrompts;
+    }
+
+    // Finally fallback to local file
+    return this.loadFromPromptsFile();
+  }
+
+  /**
+   * Load prompts from Firebase
+   */
+  async loadFromFirebase(): Promise<Prompt[]> {
+    try {
+      // Initialize Firebase if not already done
+      await firebaseService.initialize();
+      
+      return new Promise((resolve) => {
+        // Subscribe to real-time updates
+        firebaseService.subscribeToPrompts((firebasePrompts: any[]) => {
+          this.prompts = firebasePrompts.map((p, index) => ({
+            id: p.id || `firebase-${index + 1}`,
+            category: p.category as CategoryType,
+            title: p.title,
+            prompt: p.prompt,
+            youtubeLink: p.youtubeLink,
+            dateAdded: p.dateAdded || new Date().toISOString(),
+            isCustom: false
+          }));
+          
+          this.loaded = true;
+          console.log(`Loaded ${this.prompts.length} prompts from Firebase`);
+          resolve(this.prompts);
+        });
+      });
+    } catch (error) {
+      console.warn('Failed to load from Firebase:', error);
+      return [];
+    }
+  }
 
   /**
    * Load prompts from admin dashboard data file
@@ -94,7 +151,7 @@ class PromptDataService {
    */
   async getPrompts(): Promise<Prompt[]> {
     if (!this.loaded) {
-      await this.loadFromAdminDashboard();
+      await this.initialize();
     }
     return this.prompts;
   }
@@ -178,7 +235,25 @@ class PromptDataService {
   async reload(): Promise<Prompt[]> {
     this.loaded = false;
     this.prompts = [];
-    return this.loadFromAdminDashboard();
+    
+    // Unsubscribe from Firebase if active
+    if (this.unsubscribe) {
+      this.unsubscribe();
+      this.unsubscribe = null;
+    }
+    
+    return this.initialize();
+  }
+  
+  /**
+   * Clean up resources
+   */
+  cleanup(): void {
+    if (this.unsubscribe) {
+      this.unsubscribe();
+      this.unsubscribe = null;
+    }
+    firebaseService.unsubscribeFromPrompts();
   }
 }
 
