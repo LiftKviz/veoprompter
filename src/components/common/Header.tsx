@@ -1,16 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Settings } from './Settings';
 import { GoogleAuth } from './GoogleAuth';
+import { CreatePromptModal } from './CreatePromptModal';
+import { SequencesModal } from './SequencesModal';
 import { GPTService } from '@/services/gptService';
+import { Prompt } from '@/types';
 import './Header.css';
 
 interface HeaderProps {
   searchQuery?: string;
   onSearch?: (query: string) => void;
+  onPromptCreated?: (prompt: Prompt) => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ searchQuery = '', onSearch }) => {
+export const Header: React.FC<HeaderProps> = ({ searchQuery = '', onSearch, onPromptCreated }) => {
   const [showSettings, setShowSettings] = useState(false);
+  const [showCreatePrompt, setShowCreatePrompt] = useState(false);
+  const [showSequences, setShowSequences] = useState(false);
   const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
@@ -44,6 +50,19 @@ export const Header: React.FC<HeaderProps> = ({ searchQuery = '', onSearch }) =>
   const openSettings = () => {
     setShowSettings(true);
     setShowOnboarding(false);
+  };
+
+  const handlePromptSave = async (prompt: Prompt) => {
+    // Save to My Prompts
+    const result = await chrome.storage.local.get(['savedPrompts']);
+    const savedPrompts = result.savedPrompts || [];
+    const updatedPrompts = [...savedPrompts, prompt];
+    
+    await chrome.storage.local.set({ savedPrompts: updatedPrompts });
+    
+    if (onPromptCreated) {
+      onPromptCreated(prompt);
+    }
   };
 
   return (
@@ -103,10 +122,43 @@ export const Header: React.FC<HeaderProps> = ({ searchQuery = '', onSearch }) =>
             </div>
           </div>
         )}
+
+        {/* Action Buttons */}
+        {hasApiKey && (
+          <div className="action-buttons">
+            <button
+              className="action-button create-prompt-btn"
+              onClick={() => setShowCreatePrompt(true)}
+              title="Create new prompt with AI"
+            >
+              ✨ Create New Prompt
+            </button>
+            <button
+              className="action-button sequences-btn"
+              onClick={() => setShowSequences(true)}
+              title="Manage sequences"
+            >
+              🎬 Sequences
+            </button>
+          </div>
+        )}
       </header>
       
       {showSettings && (
         <Settings onClose={handleSettingsClose} />
+      )}
+      
+      {showCreatePrompt && (
+        <CreatePromptModal 
+          onClose={() => setShowCreatePrompt(false)}
+          onSave={handlePromptSave}
+        />
+      )}
+      
+      {showSequences && (
+        <SequencesModal 
+          onClose={() => setShowSequences(false)}
+        />
       )}
     </>
   );
