@@ -21,6 +21,9 @@ export type CategoryType =
   | 'storytelling'
   | 'tutorial'
   | 'vlogging'
+  | 'mobile-game'
+  | 'street-interview'
+  | 'tech-influencer'
   | 'my-prompts'
   | 'all'; // Special category for search results
 

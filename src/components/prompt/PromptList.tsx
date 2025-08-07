@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CategoryType, Prompt } from '@/types';
-import { getHardcodedPrompts } from '@/utils/promptParser';
+import { promptDataService } from '@/services/promptDataService';
 import { PromptCard } from './PromptCard';
 import './PromptList.css';
 
@@ -13,24 +13,33 @@ interface PromptListProps {
 export const PromptList: React.FC<PromptListProps> = ({ category, searchQuery = '', onBack }) => {
   const [prompts, setPrompts] = useState<Prompt[]>([]);
   const [savedPrompts, setSavedPrompts] = useState<Prompt[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load prompts
-    const allPrompts = getHardcodedPrompts();
+    // Load prompts from data service
+    const loadPrompts = async () => {
+      setLoading(true);
+      try {
+        if (category === 'my-prompts') {
+          // Load saved prompts from storage
+          const result = await chrome.storage.local.get(['savedPrompts']);
+          setSavedPrompts(result.savedPrompts || []);
+        } else if (category === 'all') {
+          // For search results, load all prompts
+          const allPrompts = await promptDataService.getPrompts();
+          setPrompts(allPrompts);
+        } else {
+          // Load prompts by category
+          const categoryPrompts = await promptDataService.getPromptsByCategory(category);
+          setPrompts(categoryPrompts);
+        }
+      } catch (error) {
+        console.error('Failed to load prompts:', error);
+      }
+      setLoading(false);
+    };
     
-    if (category === 'my-prompts') {
-      // Load saved prompts from storage
-      chrome.storage.local.get(['savedPrompts'], (result) => {
-        setSavedPrompts(result.savedPrompts || []);
-      });
-    } else if (category === 'all') {
-      // For search results, use all prompts
-      setPrompts(allPrompts);
-    } else {
-      // Filter prompts by category
-      const categoryPrompts = allPrompts.filter(p => p.category === category);
-      setPrompts(categoryPrompts);
-    }
+    loadPrompts();
   }, [category]);
 
   // Filter prompts based on search query
@@ -98,7 +107,11 @@ export const PromptList: React.FC<PromptListProps> = ({ category, searchQuery = 
         </h2>
       </div>
       
-      {displayPrompts.length === 0 ? (
+      {loading ? (
+        <div className="loading-state">
+          <p>Loading prompts...</p>
+        </div>
+      ) : displayPrompts.length === 0 ? (
         <div className="empty-state">
           <p>{getEmptyMessage()}</p>
         </div>

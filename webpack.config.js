@@ -68,6 +68,11 @@ module.exports = {
         {
           from: 'src/data/knowledge-base.json',
           to: 'data/knowledge-base.json'
+        },
+        {
+          from: 'admin-dashboard/prompts-data.js',
+          to: 'admin-dashboard/prompts-data.js',
+          noErrorOnMissing: true
         }
       ]
     }),

@@ -31,6 +31,27 @@ export const categories: Category[] = [
   },
   {
     id: '5',
+    name: 'mobile-game',
+    icon: '🎮',
+    description: 'Mobile game ads and gameplay',
+    color: '#A8E6CF'
+  },
+  {
+    id: '6',
+    name: 'street-interview',
+    icon: '🎤',
+    description: 'Street interviews and social content',
+    color: '#FF8B94'
+  },
+  {
+    id: '7',
+    name: 'tech-influencer',
+    icon: '💻',
+    description: 'Tech reviews and influencer content',
+    color: '#B4A7D6'
+  },
+  {
+    id: '8',
     name: 'my-prompts',
     icon: '⭐',
     description: 'Your saved and custom prompts',
