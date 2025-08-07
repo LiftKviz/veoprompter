@@ -11,7 +11,9 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
     "video": "remotion studio src/remotion/index.tsx --public-dir=public-remotion",
-    "video:render": "remotion render src/remotion/index.tsx VeoPromo out/veo-promo.mp4 --public-dir=public-remotion"
+    "video:render": "remotion render src/remotion/index.tsx VeoPromo out/veo-promo.mp4 --public-dir=public-remotion",
+    "deploy:prepare": "node deploy-admin.js",
+    "deploy:admin": "npm run deploy:prepare && echo 'Admin dashboard ready - deploy admin-dashboard folder to Netlify'"
   },
   "dependencies": {
     "@remotion/cli": "^4.0.327",
