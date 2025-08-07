@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Settings } from './Settings';
+import { GoogleAuth } from './GoogleAuth';
 import { GPTService } from '@/services/gptService';
 import './Header.css';
 
@@ -67,6 +68,7 @@ export const Header: React.FC<HeaderProps> = ({ searchQuery = '', onSearch }) =>
                 <span className="search-icon" aria-hidden="true">🔍</span>
               </div>
             )}
+            <GoogleAuth />
             {hasApiKey !== null && (
               <div className="api-status">
                 <span 
