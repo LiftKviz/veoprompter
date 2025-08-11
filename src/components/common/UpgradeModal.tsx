@@ -25,7 +25,6 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
   message,
   userState,
   onSignIn,
-  onAddApiKey,
   onUpgrade
 }) => {
   const [isSigningIn, setIsSigningIn] = useState(false);
@@ -87,26 +86,6 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
     </div>
   );
 
-  const renderSubscriptionOption = () => (
-    <div className="upgrade-option">
-      <div className="option-icon">⭐</div>
-      <h3>Pro Subscription</h3>
-      <p>Unlimited access with premium features</p>
-      <ul className="feature-list">
-        <li>✓ Unlimited AI generations</li>
-        <li>✓ Priority support</li>
-        <li>✓ Advanced features</li>
-        <li>✓ Team collaboration</li>
-      </ul>
-      <button 
-        className="option-button premium"
-        onClick={onUpgrade}
-      >
-        Upgrade to Pro - $19/mo
-      </button>
-      <span className="option-note">Best for professionals</span>
-    </div>
-  );
 
   return (
     <>

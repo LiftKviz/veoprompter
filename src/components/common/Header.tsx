@@ -20,7 +20,7 @@ export const Header: React.FC<HeaderProps> = ({ searchQuery = '', onSearch, onPr
   const [showSequences, setShowSequences] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
   
-  const { userState, featureAccess, canAccess, getRemainingModifications } = useAuth();
+  const { userState, canAccess, getRemainingModifications } = useAuth();
 
   const handleSettingsClose = () => {
     setShowSettings(false);
@@ -51,6 +51,36 @@ export const Header: React.FC<HeaderProps> = ({ searchQuery = '', onSearch, onPr
   return (
     <>
       <header className="header">
+        {/* User Status Row */}
+        <div className="header-user-row">
+          <div className="user-status">
+            {userState.isSignedIn ? (
+              <div className="user-info">
+                <button 
+                  className={`user-tier-badge tier-${userState.tier} ${userState.tier === 'free' ? 'clickable' : ''}`}
+                  onClick={userState.tier === 'free' ? handleUpgradeClick : undefined}
+                  disabled={userState.tier === 'paid'}
+                  title={userState.tier === 'free' ? 'Click to upgrade to Pro' : 'Pro plan'}
+                >
+                  {userState.tier === 'paid' ? '⭐ Pro' : '🎁 Free'}
+                </button>
+                {userState.tier === 'free' && (
+                  <button 
+                    className={`modifications-count ${getRemainingModifications() === 0 ? 'limit-reached' : ''} clickable`}
+                    onClick={handleUpgradeClick}
+                    title="Click to upgrade for unlimited modifications"
+                  >
+                    {getRemainingModifications()}/3 left
+                  </button>
+                )}
+              </div>
+            ) : (
+              <GoogleAuth />
+            )}
+          </div>
+        </div>
+        
+        {/* Main Header Row */}
         <div className="header-content">
           <div className="header-left">
             <img src="/icons/icon32.svg" alt="Veo 3 Logo" className="header-logo" />
@@ -70,32 +100,6 @@ export const Header: React.FC<HeaderProps> = ({ searchQuery = '', onSearch, onPr
                 <span className="search-icon" aria-hidden="true">🔍</span>
               </div>
             )}
-            {/* User Status Indicator */}
-            <div className="user-status">
-              {userState.isSignedIn ? (
-                <div className="user-info">
-                  <button 
-                    className={`user-tier-badge tier-${userState.tier} ${userState.tier === 'free' ? 'clickable' : ''}`}
-                    onClick={userState.tier === 'free' ? handleUpgradeClick : undefined}
-                    disabled={userState.tier === 'paid'}
-                    title={userState.tier === 'free' ? 'Click to upgrade to Pro' : 'Pro plan'}
-                  >
-                    {userState.tier === 'paid' ? '⭐ Pro' : '🎁 Free'}
-                  </button>
-                  {userState.tier === 'free' && (
-                    <button 
-                      className={`modifications-count ${getRemainingModifications() === 0 ? 'limit-reached' : ''} clickable`}
-                      onClick={handleUpgradeClick}
-                      title="Click to upgrade for unlimited modifications"
-                    >
-                      {getRemainingModifications()}/3 left
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <GoogleAuth />
-              )}
-            </div>
             <button 
               className="icon-button"
               onClick={openSettings}

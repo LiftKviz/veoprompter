@@ -4,7 +4,7 @@
  */
 
 import { Prompt, CategoryType } from '@/types';
-import { firebaseService } from './firebaseService';
+import firebaseService from './firebaseService';
 
 export interface AdminPrompt {
   category: string;

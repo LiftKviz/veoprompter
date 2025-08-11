@@ -214,6 +214,26 @@
   text-decoration: underline;
 }
 
+.sign-out-button {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 12px;
+  width: 100%;
+}
+
+.sign-out-button:hover {
+  background: #fecaca;
+  border-color: #f87171;
+  transform: translateY(-1px);
+}
+
 .settings-footer {
   display: flex;
   justify-content: center;
@@ -1294,9 +1314,18 @@
 .header {
   background: #ffffff;
   border-bottom: 1px solid #f0f0f0;
-  padding: 16px 24px;
+  padding: 12px 24px 16px;
 }
 
+/* User Status Row */
+.header-user-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+  min-height: 28px;
+}
+
+/* Main Header Row */
 .header-content {
   display: flex;
   align-items: center;
@@ -1434,8 +1463,8 @@
   padding: 8px 12px;
   border: 1px solid #e9ecef;
   transition: border-color 0.2s ease;
-  flex: 1;
-  min-width: 120px;
+  min-width: 200px;
+  max-width: 300px;
 }
 
 .search-container:focus-within {

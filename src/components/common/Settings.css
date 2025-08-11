@@ -214,6 +214,26 @@
   text-decoration: underline;
 }
 
+.sign-out-button {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 12px;
+  width: 100%;
+}
+
+.sign-out-button:hover {
+  background: #fecaca;
+  border-color: #f87171;
+  transform: translateY(-1px);
+}
+
 .settings-footer {
   display: flex;
   justify-content: center;

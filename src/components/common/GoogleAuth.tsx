@@ -11,7 +11,7 @@ interface User {
 export const GoogleAuth: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
-  const { userState } = useAuth();
+  const { } = useAuth();
 
   useEffect(() => {
     // Check if user is already signed in

@@ -27,7 +27,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt, onSave, onRemove
   const [showSequenceSelector, setShowSequenceSelector] = useState(false);
   const [availableSequences, setAvailableSequences] = useState<any[]>([]);
 
-  const { userState, featureAccess, canAccess, getUpgradeMessage, signIn, trackModification, getRemainingModifications } = useAuth();
+  const { userState, canAccess, getUpgradeMessage, signIn, trackModification, getRemainingModifications } = useAuth();
 
   const showToastMessage = (message: string) => {
     setToastMessage(message);

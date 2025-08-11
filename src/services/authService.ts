@@ -261,7 +261,9 @@ class AuthService {
     this.userState = {
       isSignedIn: false,
       tier: 'anonymous',
-      hasApiKey: false
+      hasApiKey: false,
+      dailyModificationsUsed: 0,
+      lastResetDate: new Date().toDateString()
     };
 
     // Clear from storage

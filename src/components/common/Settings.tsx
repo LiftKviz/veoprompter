@@ -7,11 +7,18 @@ interface SettingsProps {
 }
 
 export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
-  const { userState, getRemainingModifications } = useAuth();
+  const { userState, getRemainingModifications, signOut } = useAuth();
 
   const handleUpgrade = () => {
     // TODO: Implement upgrade flow
     window.open('https://your-upgrade-url.com', '_blank');
+  };
+
+  const handleSignOut = async () => {
+    if (confirm('Are you sure you want to sign out?')) {
+      await signOut();
+      onClose(); // Close settings modal after sign out
+    }
   };
 
   return (
@@ -61,6 +68,12 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                 </div>
               )}
             </div>
+            
+            {userState.isSignedIn && (
+              <button className="sign-out-button" onClick={handleSignOut}>
+                🚪 Sign Out
+              </button>
+            )}
           </div>
 
           {/* Upgrade Section */}
