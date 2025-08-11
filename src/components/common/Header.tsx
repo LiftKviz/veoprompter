@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Settings } from './Settings';
 import { GoogleAuth } from './GoogleAuth';
 import { CreatePromptModal } from './CreatePromptModal';
 import { SequencesModal } from './SequencesModal';
-import { GPTService } from '@/services/gptService';
+import { UpgradeModal } from './UpgradeModal';
 import { Prompt } from '@/types';
+import { useAuth } from '@/hooks/useAuth';
 import './Header.css';
 
 interface HeaderProps {
@@ -17,39 +18,21 @@ export const Header: React.FC<HeaderProps> = ({ searchQuery = '', onSearch, onPr
   const [showSettings, setShowSettings] = useState(false);
   const [showCreatePrompt, setShowCreatePrompt] = useState(false);
   const [showSequences, setShowSequences] = useState(false);
-  const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
-  const [showOnboarding, setShowOnboarding] = useState(false);
-
-  useEffect(() => {
-    checkApiKeyStatus();
-  }, []);
-
-  const checkApiKeyStatus = async () => {
-    try {
-      const apiKey = await GPTService.getInstance().getApiKey();
-      const hasKey = Boolean(apiKey);
-      setHasApiKey(hasKey);
-      
-      // Show onboarding if no API key is set
-      if (!hasKey) {
-        setShowOnboarding(true);
-      }
-    } catch (error) {
-      console.error('Failed to check API key status:', error);
-      setHasApiKey(false);
-    }
-  };
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  
+  const { userState, featureAccess, canAccess, getRemainingModifications } = useAuth();
 
   const handleSettingsClose = () => {
     setShowSettings(false);
-    setShowOnboarding(false);
-    // Recheck API key status after settings are closed
-    checkApiKeyStatus();
   };
 
   const openSettings = () => {
     setShowSettings(true);
-    setShowOnboarding(false);
+  };
+
+  const handleUpgradeClick = () => {
+    console.log('Upgrade clicked!'); // Debug log
+    setShowUpgrade(true);
   };
 
   const handlePromptSave = async (prompt: Prompt) => {
@@ -87,17 +70,32 @@ export const Header: React.FC<HeaderProps> = ({ searchQuery = '', onSearch, onPr
                 <span className="search-icon" aria-hidden="true">🔍</span>
               </div>
             )}
-            <GoogleAuth />
-            {hasApiKey !== null && (
-              <div className="api-status">
-                <span 
-                  className={`status-indicator ${hasApiKey ? 'connected' : 'disconnected'}`}
-                  title={hasApiKey ? 'API key configured' : 'API key required'}
-                >
-                  {hasApiKey ? '🟢' : '🔴'}
-                </span>
-              </div>
-            )}
+            {/* User Status Indicator */}
+            <div className="user-status">
+              {userState.isSignedIn ? (
+                <div className="user-info">
+                  <button 
+                    className={`user-tier-badge tier-${userState.tier} ${userState.tier === 'free' ? 'clickable' : ''}`}
+                    onClick={userState.tier === 'free' ? handleUpgradeClick : undefined}
+                    disabled={userState.tier === 'paid'}
+                    title={userState.tier === 'free' ? 'Click to upgrade to Pro' : 'Pro plan'}
+                  >
+                    {userState.tier === 'paid' ? '⭐ Pro' : '🎁 Free'}
+                  </button>
+                  {userState.tier === 'free' && (
+                    <button 
+                      className={`modifications-count ${getRemainingModifications() === 0 ? 'limit-reached' : ''} clickable`}
+                      onClick={handleUpgradeClick}
+                      title="Click to upgrade for unlimited modifications"
+                    >
+                      {getRemainingModifications()}/3 left
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <GoogleAuth />
+              )}
+            </div>
             <button 
               className="icon-button"
               onClick={openSettings}
@@ -107,39 +105,28 @@ export const Header: React.FC<HeaderProps> = ({ searchQuery = '', onSearch, onPr
             </button>
           </div>
         </div>
-        
-        {showOnboarding && !hasApiKey && (
-          <div className="onboarding-banner">
-            <div className="onboarding-content">
-              <h3>🚀 Get Started!</h3>
-              <p>Add your OpenAI API key to unlock prompt modification features.</p>
-              <button 
-                className="primary setup-button"
-                onClick={openSettings}
-              >
-                Setup API Key
-              </button>
-            </div>
-          </div>
-        )}
 
-        {/* Action Buttons */}
-        {hasApiKey && (
+        {/* Action Buttons - Show for users with appropriate access */}
+        {(canAccess('createPrompts') || canAccess('createSequences')) && (
           <div className="action-buttons">
-            <button
-              className="action-button create-prompt-btn"
-              onClick={() => setShowCreatePrompt(true)}
-              title="Create new prompt with AI"
-            >
-              ✨ Create New Prompt
-            </button>
-            <button
-              className="action-button sequences-btn"
-              onClick={() => setShowSequences(true)}
-              title="Manage sequences"
-            >
-              🎬 Sequences
-            </button>
+            {canAccess('createPrompts') && (
+              <button
+                className="action-button create-prompt-btn"
+                onClick={() => setShowCreatePrompt(true)}
+                title="Create new prompt with AI"
+              >
+                ✨ Create New Prompt
+              </button>
+            )}
+            {canAccess('createSequences') && (
+              <button
+                className="action-button sequences-btn"
+                onClick={() => setShowSequences(true)}
+                title="Manage sequences"
+              >
+                🎬 Sequences
+              </button>
+            )}
           </div>
         )}
       </header>
@@ -158,6 +145,21 @@ export const Header: React.FC<HeaderProps> = ({ searchQuery = '', onSearch, onPr
       {showSequences && (
         <SequencesModal 
           onClose={() => setShowSequences(false)}
+        />
+      )}
+      
+      {showUpgrade && (
+        <UpgradeModal 
+          isOpen={showUpgrade}
+          onClose={() => setShowUpgrade(false)}
+          feature="Pro Features"
+          message="Upgrade to Pro for unlimited modifications and advanced features"
+          userState={userState}
+          onUpgrade={() => {
+            // TODO: Implement upgrade flow
+            window.open('https://your-upgrade-url.com', '_blank');
+            setShowUpgrade(false);
+          }}
         />
       )}
     </>

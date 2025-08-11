@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import './GoogleAuth.css';
 
 interface User {
@@ -10,6 +11,7 @@ interface User {
 export const GoogleAuth: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
+  const { userState } = useAuth();
 
   useEffect(() => {
     // Check if user is already signed in

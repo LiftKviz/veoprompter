@@ -61,11 +61,17 @@ const App: React.FC = () => {
     return <CategoryGrid onCategorySelect={handleCategorySelect} />;
   };
 
+  const handlePromptCreated = () => {
+    setSearchQuery('');
+    setAppState({ activeCategory: 'my-prompts' as CategoryType, view: 'my-prompts' });
+  };
+
   return (
     <div className="app">
       <Header 
         searchQuery={searchQuery}
         onSearch={handleSearch}
+        onPromptCreated={handlePromptCreated}
       />
       <SubscriptionStatus showDetailsButton={false} />
       <main className="app-content">

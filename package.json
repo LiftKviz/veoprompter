@@ -1,6 +1,6 @@
 {
   "name": "veo-3-prompt-assistant",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Chrome extension for discovering and managing Veo 3 prompt templates",
   "private": true,
   "scripts": {

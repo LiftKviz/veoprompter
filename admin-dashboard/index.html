@@ -398,6 +398,11 @@
   <!-- Admin Dashboard Scripts -->
   <script src="firebase-init.js"></script>
   <script src="prompts-data.js"></script>
+  <script>
+    // Helpful console noise to confirm domain and Firebase config at runtime
+    console.log('Admin host:', location.host);
+    console.log('Firebase authDomain:', (window.firebase && window.firebase.app ? window.firebase.app().options.authDomain : 'unknown'));
+  </script>
   <script src="admin.js"></script>
 </body>
 </html>

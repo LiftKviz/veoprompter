@@ -191,6 +191,28 @@
   color: #111827;
 }
 
+.sequence-actions {
+  margin-bottom: 20px;
+}
+
+.add-prompt-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-prompt-btn:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
 .empty-sequence {
   text-align: center;
   padding: 40px 20px;
@@ -211,10 +233,21 @@
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.sequence-prompt-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.prompt-header {
   padding: 16px;
+  cursor: pointer;
   display: flex;
+  justify-content: space-between;
   align-items: flex-start;
-  gap: 12px;
 }
 
 .prompt-info {
@@ -222,6 +255,199 @@
   align-items: flex-start;
   gap: 12px;
   flex: 1;
+}
+
+.prompt-title-section {
+  flex: 1;
+}
+
+.prompt-title-section h4 {
+  margin: 0 0 4px 0;
+  color: #1e293b;
+  font-size: 15px;
+}
+
+.prompt-preview {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.prompt-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.expand-icon {
+  color: #64748b;
+  font-size: 12px;
+  transition: transform 0.2s ease;
+}
+
+.prompt-expanded {
+  padding: 0 16px 16px 16px;
+  border-top: 1px solid #e2e8f0;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.prompt-full-text {
+  margin: 16px 0;
+  color: #334155;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.prompt-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.copy-btn {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.copy-btn:hover {
+  background: #bae6fd;
+  transform: translateY(-1px);
+}
+
+.next-scene-btn {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: white;
+}
+
+.next-scene-btn:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  transform: translateY(-1px);
+}
+
+.remove-btn {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.remove-btn:hover {
+  background: #fecaca;
+  transform: translateY(-1px);
+}
+
+/* Next Scene Modal */
+.next-scene-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.next-scene-modal .modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.next-scene-modal h3 {
+  margin: 0 0 8px 0;
+  color: #111827;
+  font-size: 18px;
+}
+
+.next-scene-modal p {
+  margin: 0 0 16px 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.next-scene-modal textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 100px;
+}
+
+.next-scene-modal textarea:focus {
+  outline: none;
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.next-scene-modal .modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.next-scene-modal .cancel-btn,
+.next-scene-modal .generate-btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.next-scene-modal .cancel-btn {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.next-scene-modal .cancel-btn:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+.next-scene-modal .generate-btn {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: white;
+}
+
+.next-scene-modal .generate-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  transform: translateY(-1px);
+}
+
+.next-scene-modal button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .sequence-number {
@@ -236,35 +462,6 @@
   font-size: 12px;
   font-weight: 600;
   flex-shrink: 0;
-}
-
-.prompt-content h4 {
-  margin: 0 0 8px 0;
-  color: #1e293b;
-  font-size: 14px;
-}
-
-.prompt-content p {
-  margin: 0;
-  color: #64748b;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.remove-prompt-btn {
-  background: #fee2e2;
-  border: 1px solid #fecaca;
-  color: #dc2626;
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.remove-prompt-btn:hover {
-  background: #fecaca;
-  border-color: #f87171;
 }
 
 .loading, .empty-state {

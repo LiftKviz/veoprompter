@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { paymentService, PaymentUser } from '../../services/paymentService';
+import React, { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import './SubscriptionStatus.css';
 
 interface SubscriptionStatusProps {
@@ -11,147 +11,64 @@ const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({
   onUpgradeClick, 
   showDetailsButton = true 
 }) => {
-  const [user, setUser] = useState<PaymentUser | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [usageData, setUsageData] = useState<{
-    gptModifications: number;
-    savedPrompts: number;
-  }>({ gptModifications: 0, savedPrompts: 0 });
+  const { userState, getRemainingModifications } = useAuth();
+  const [isVisible, setIsVisible] = useState(true);
 
-  useEffect(() => {
-    loadUserData();
-    
-    // Listen for payment status changes
-    const handlePaymentChange = (message: any) => {
-      if (message.type === 'PAYMENT_STATUS_CHANGED') {
-        setUser(message.user);
-        loadUsageData();
-      }
-    };
+  const remainingModifications = getRemainingModifications();
+  const shouldShow = userState.tier === 'free' && remainingModifications === 0 && isVisible;
 
-    chrome.runtime.onMessage.addListener(handlePaymentChange);
-    return () => chrome.runtime.onMessage.removeListener(handlePaymentChange);
-  }, []);
-
-  const loadUserData = async () => {
-    try {
-      setLoading(true);
-      const userData = await paymentService.getUser();
-      setUser(userData);
-      await loadUsageData();
-    } catch (error) {
-      console.error('Error loading user data:', error);
-    } finally {
-      setLoading(false);
+  const handleUpgrade = () => {
+    if (onUpgradeClick) {
+      onUpgradeClick();
+    } else {
+      // TODO: Implement upgrade flow
+      window.open('https://your-upgrade-url.com', '_blank');
     }
   };
 
-  const loadUsageData = async () => {
-    try {
-      const [gptRemaining, savedRemaining] = await Promise.all([
-        paymentService.getRemainingUsage('gpt_modification'),
-        paymentService.getRemainingUsage('saved_prompt')
-      ]);
-
-      setUsageData({
-        gptModifications: gptRemaining,
-        savedPrompts: savedRemaining
-      });
-    } catch (error) {
-      console.error('Error loading usage data:', error);
-    }
+  const handleClose = () => {
+    setIsVisible(false);
   };
 
-  const handleUpgrade = async () => {
-    try {
-      if (onUpgradeClick) {
-        onUpgradeClick();
-      } else {
-        await paymentService.openPaymentPage();
-      }
-    } catch (error) {
-      console.error('Error opening payment page:', error);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="subscription-status loading">
-        <div className="status-indicator"></div>
-        <span>Loading subscription...</span>
-      </div>
-    );
+  // Only show if user is on free tier and has no modifications left
+  if (!shouldShow) {
+    return null;
   }
-
-  if (!user) {
-    return (
-      <div className="subscription-status error">
-        <div className="status-indicator error"></div>
-        <span>Unable to load subscription status</span>
-      </div>
-    );
-  }
-
-  const isPremium = user.paid && user.subscriptionStatus === 'active';
 
   return (
-    <div className={`subscription-status ${isPremium ? 'premium' : 'free'}`}>
-      <div className="status-header">
-        <div className={`status-indicator ${isPremium ? 'premium' : 'free'}`}></div>
-        <div className="status-info">
-          <span className="status-label">
-            {isPremium ? 'Premium' : 'Free'}
-          </span>
-          {isPremium && user.subscriptionStatus && (
-            <span className="subscription-details">
-              {user.subscriptionStatus === 'active' ? 'Active' : user.subscriptionStatus}
-            </span>
-          )}
+    <div className="subscription-banner">
+      <button 
+        className="banner-close" 
+        onClick={handleClose}
+        aria-label="Close banner"
+      >
+        ×
+      </button>
+      
+      <div className="banner-content">
+        <div className="banner-icon">⚡</div>
+        <div className="banner-text">
+          <h4>Out of free modifications</h4>
+          <p>You've used all 3 daily modifications. Upgrade to continue.</p>
         </div>
       </div>
-
-      {!isPremium && (
-        <div className="usage-limits">
-          <div className="usage-item">
-            <span>AI Modifications:</span>
-            <span className={usageData.gptModifications === 0 ? 'limit-reached' : ''}>
-              {usageData.gptModifications === -1 ? '∞' : usageData.gptModifications} left today
-            </span>
-          </div>
-          <div className="usage-item">
-            <span>Saved Prompts:</span>
-            <span className={usageData.savedPrompts === 0 ? 'limit-reached' : ''}>
-              {usageData.savedPrompts === -1 ? '∞' : usageData.savedPrompts} remaining
-            </span>
-          </div>
-        </div>
-      )}
-
-      <div className="status-actions">
-        {!isPremium && (
-          <button 
-            className="upgrade-button"
-            onClick={handleUpgrade}
-          >
-            Upgrade to Premium
-          </button>
-        )}
-        
+      
+      <div className="banner-actions">
+        <button 
+          className="upgrade-button"
+          onClick={handleUpgrade}
+        >
+          Upgrade Now
+        </button>
         {showDetailsButton && (
           <button 
             className="details-button"
             onClick={handleUpgrade}
           >
-            {isPremium ? 'Manage Subscription' : 'View Plans'}
+            View Plans
           </button>
         )}
       </div>
-
-      {isPremium && user.paidAt && (
-        <div className="premium-since">
-          Premium since {user.paidAt.toLocaleDateString()}
-        </div>
-      )}
     </div>
   );
 };

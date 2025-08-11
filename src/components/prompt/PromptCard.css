@@ -1,45 +1,58 @@
 .prompt-card {
-  background-color: var(--background);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  background: #ffffff;
+  border: 1px solid #DADCE0;
+  border-radius: 8px;
   overflow: hidden;
-  transition: box-shadow 0.2s;
+  transition: border-color 0.15s ease;
 }
 
 .prompt-card:hover {
-  box-shadow: var(--shadow-1);
+  border-color: #6748B5;
 }
 
 .prompt-header {
-  padding: 12px 16px;
+  padding: 16px 20px;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  transition: background-color 0.2s ease;
+}
+
+.prompt-header:hover {
+  background: #F8F9FA;
 }
 
 .prompt-title {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   margin: 0;
-  color: var(--text-primary);
+  color: #1a1a1a;
 }
 
 .expand-icon {
   font-size: 12px;
-  color: var(--text-secondary);
+  color: #999;
+  transition: transform 0.2s ease;
+}
+
+.prompt-header[aria-expanded="true"] .expand-icon {
+  transform: rotate(90deg);
 }
 
 .prompt-content {
-  padding: 0 16px 16px;
-  border-top: 1px solid var(--border);
+  padding: 0 20px 20px 20px;
 }
 
 .prompt-text {
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--text-secondary);
-  margin: 12px 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #6B6C6E;
+  margin: 0 0 16px 0;
+  padding: 12px;
+  background: #F8F9FA;
+  border-radius: 6px;
+  border: 1px solid #DADCE0;
 }
 
 .prompt-actions {
@@ -49,22 +62,24 @@
 }
 
 .action-button {
-  padding: 6px 12px;
-  font-size: 12px;
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-size: 11px;
+  background: #ffffff;
+  border: 1px solid #DADCE0;
+  border-radius: 4px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
   display: flex;
   align-items: center;
   gap: 4px;
+  font-weight: 400;
+  color: #6B6C6E;
 }
 
 .action-button:hover {
-  background-color: var(--primary-color);
-  color: white;
-  border-color: var(--primary-color);
+  background: #F8F9FA;
+  border-color: #6748B5;
+  color: #6748B5;
 }
 
 .action-button.disabled {
@@ -79,6 +94,18 @@
   background-color: var(--surface);
   color: var(--text-muted);
   border-color: var(--border);
+}
+
+.action-button.locked {
+  background: #F8F9FA;
+  color: #ABA8A8;
+  border-color: #DADCE0;
+}
+
+.action-button.locked:hover {
+  background: #F8F9FA;
+  border-color: #ABA8A8;
+  color: #ABA8A8;
 }
 
 .modify-section {
@@ -100,4 +127,105 @@
   display: flex;
   gap: 8px;
   justify-content: flex-end;
+}
+
+/* Sequence Selector Modal */
+.sequence-selector-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.sequence-selector-modal .modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.sequence-selector-modal h3 {
+  margin: 0 0 8px 0;
+  color: #111827;
+  font-size: 18px;
+}
+
+.sequence-selector-modal p {
+  margin: 0 0 16px 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.sequence-selector-modal .sequences-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.sequence-option {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.sequence-option:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+.sequence-option .sequence-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sequence-option strong {
+  color: #1e293b;
+  font-size: 15px;
+}
+
+.sequence-option span {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.cancel-sequence-btn {
+  background: #f3f4f6;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  color: #374151;
+  transition: background-color 0.2s ease;
+  width: 100%;
+}
+
+.cancel-sequence-btn:hover {
+  background: #e5e7eb;
+}
+
+.remove-prompt-btn {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.remove-prompt-btn:hover {
+  background: #fecaca;
+  transform: translateY(-1px);
 }

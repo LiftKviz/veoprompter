@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Prompt } from '@/types';
+import { CreatePromptModal } from './CreatePromptModal';
+import { GPTService } from '@/services/gptService';
 import './SequencesModal.css';
 
 interface Sequence {
@@ -13,12 +15,116 @@ interface SequencesModalProps {
   onClose: () => void;
 }
 
+interface SequencePromptCardProps {
+  prompt: Prompt;
+  index: number;
+  onRemove: () => void;
+  onNextScene: (prompt: Prompt, instruction: string) => void;
+}
+
+const SequencePromptCard: React.FC<SequencePromptCardProps> = ({ prompt, index, onRemove, onNextScene }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [showNextSceneModal, setShowNextSceneModal] = useState(false);
+  const [nextSceneInstruction, setNextSceneInstruction] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(prompt.prompt);
+      // Could add a toast notification here
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  const handleNextScene = async () => {
+    if (!nextSceneInstruction.trim()) return;
+    
+    setIsGenerating(true);
+    try {
+      await onNextScene(prompt, nextSceneInstruction);
+      setShowNextSceneModal(false);
+      setNextSceneInstruction('');
+    } catch (error) {
+      console.error('Failed to generate next scene:', error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  return (
+    <div className="sequence-prompt-card">
+      <div className="prompt-header" onClick={() => setIsExpanded(!isExpanded)}>
+        <div className="prompt-info">
+          <div className="sequence-number">#{index + 1}</div>
+          <div className="prompt-title-section">
+            <h4>{prompt.title}</h4>
+            {!isExpanded && <p className="prompt-preview">{prompt.prompt.substring(0, 100)}...</p>}
+          </div>
+        </div>
+        <div className="prompt-controls">
+          <span className="expand-icon">{isExpanded ? '▼' : '▶'}</span>
+        </div>
+      </div>
+      
+      {isExpanded && (
+        <div className="prompt-expanded">
+          <p className="prompt-full-text">{prompt.prompt}</p>
+          <div className="prompt-actions">
+            <button className="action-btn copy-btn" onClick={handleCopy}>
+              📋 Copy
+            </button>
+            <button className="action-btn next-scene-btn" onClick={() => setShowNextSceneModal(true)}>
+              🎬 Next Scene
+            </button>
+            <button className="action-btn remove-btn" onClick={onRemove}>
+              🗑️ Remove
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {showNextSceneModal && (
+        <div className="next-scene-modal">
+          <div className="modal-content">
+            <h3>Create Next Scene</h3>
+            <p>Describe what happens in the next scene. Characters and style will be preserved.</p>
+            <textarea
+              value={nextSceneInstruction}
+              onChange={(e) => setNextSceneInstruction(e.target.value)}
+              placeholder="e.g., The character walks into a coffee shop and orders a latte, then sits by the window watching the rain"
+              rows={4}
+            />
+            <div className="modal-actions">
+              <button 
+                className="cancel-btn" 
+                onClick={() => setShowNextSceneModal(false)}
+                disabled={isGenerating}
+              >
+                Cancel
+              </button>
+              <button 
+                className="generate-btn" 
+                onClick={handleNextScene}
+                disabled={!nextSceneInstruction.trim() || isGenerating}
+              >
+                {isGenerating ? '⏳ Generating...' : '✨ Generate Scene'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const SequencesModal: React.FC<SequencesModalProps> = ({ onClose }) => {
   const [sequences, setSequences] = useState<Sequence[]>([]);
   const [selectedSequence, setSelectedSequence] = useState<Sequence | null>(null);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newSequenceName, setNewSequenceName] = useState('');
+  const [showCreatePrompt, setShowCreatePrompt] = useState(false);
 
   useEffect(() => {
     loadSequences();
@@ -88,6 +194,55 @@ export const SequencesModal: React.FC<SequencesModalProps> = ({ onClose }) => {
     
     await saveSequences(updatedSequences);
     setSelectedSequence(updatedSequence);
+  };
+
+  const handlePromptCreated = async (prompt: Prompt) => {
+    await addPromptToSequence(prompt);
+    setShowCreatePrompt(false);
+  };
+
+  const handleNextScene = async (previousPrompt: Prompt, instruction: string) => {
+    if (!selectedSequence) return;
+    
+    const gptService = GPTService.getInstance();
+    
+    // Create a special instruction that preserves character consistency
+    const nextSceneInstruction = `
+    Create the next scene in this sequence. 
+    
+    IMPORTANT: Maintain character consistency:
+    - Keep the same character descriptions, clothing, and appearance
+    - Keep the same visual style and cinematography
+    - Keep the same mood and tone
+    
+    Previous scene: ${previousPrompt.prompt}
+    
+    Next scene should: ${instruction}
+    
+    Generate a prompt that continues the story while maintaining all character and style elements from the previous scene.
+    `;
+    
+    try {
+      const nextScenePrompt = await gptService.modifyPrompt({
+        prompt: previousPrompt.prompt,
+        instruction: nextSceneInstruction
+      });
+      
+      // Create a new prompt object for the next scene
+      const newPrompt: Prompt = {
+        id: `scene-${Date.now()}`,
+        category: previousPrompt.category,
+        title: `${previousPrompt.title} - Scene ${selectedSequence.prompts.length + 1}`,
+        prompt: nextScenePrompt,
+        dateAdded: new Date().toISOString(),
+        isCustom: true
+      };
+      
+      await addPromptToSequence(newPrompt);
+    } catch (error) {
+      console.error('Failed to generate next scene:', error);
+      throw error;
+    }
   };
 
   const removePromptFromSequence = async (promptIndex: number) => {
@@ -206,31 +361,31 @@ export const SequencesModal: React.FC<SequencesModalProps> = ({ onClose }) => {
           <h3>{selectedSequence.name}</h3>
         </div>
 
+        <div className="sequence-actions">
+          <button
+            className="add-prompt-btn"
+            onClick={() => setShowCreatePrompt(true)}
+          >
+            ✨ Add New Prompt
+          </button>
+        </div>
+
         <div className="sequence-prompts">
           {selectedSequence.prompts.length === 0 ? (
             <div className="empty-sequence">
               <p>This sequence is empty.</p>
-              <p>Add prompts from your library to build a video sequence.</p>
+              <p>Click "Add New Prompt" to create a prompt for this sequence.</p>
             </div>
           ) : (
             <div className="prompts-list">
               {selectedSequence.prompts.map((prompt, index) => (
-                <div key={index} className="sequence-prompt-card">
-                  <div className="prompt-info">
-                    <div className="sequence-number">#{index + 1}</div>
-                    <div className="prompt-content">
-                      <h4>{prompt.title}</h4>
-                      <p>{prompt.prompt.substring(0, 150)}...</p>
-                    </div>
-                  </div>
-                  <button
-                    className="remove-prompt-btn"
-                    onClick={() => removePromptFromSequence(index)}
-                    title="Remove from sequence"
-                  >
-                    Remove
-                  </button>
-                </div>
+                <SequencePromptCard
+                  key={index}
+                  prompt={prompt}
+                  index={index}
+                  onRemove={() => removePromptFromSequence(index)}
+                  onNextScene={handleNextScene}
+                />
               ))}
             </div>
           )}
@@ -240,23 +395,32 @@ export const SequencesModal: React.FC<SequencesModalProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="modal-backdrop" onClick={handleBackdropClick} onKeyDown={handleKeyDown}>
-      <div className="sequences-modal" role="dialog" aria-labelledby="sequences-title">
-        <div className="modal-header">
-          <h2 id="sequences-title">🎬 Sequences</h2>
-          <button 
-            className="close-button"
-            onClick={onClose}
-            aria-label="Close modal"
-          >
-            ×
-          </button>
-        </div>
+    <>
+      <div className="modal-backdrop" onClick={handleBackdropClick} onKeyDown={handleKeyDown}>
+        <div className="sequences-modal" role="dialog" aria-labelledby="sequences-title">
+          <div className="modal-header">
+            <h2 id="sequences-title">🎬 Sequences</h2>
+            <button 
+              className="close-button"
+              onClick={onClose}
+              aria-label="Close modal"
+            >
+              ×
+            </button>
+          </div>
 
-        <div className="modal-body">
-          {selectedSequence ? renderSequenceDetails() : renderSequencesList()}
+          <div className="modal-body">
+            {selectedSequence ? renderSequenceDetails() : renderSequencesList()}
+          </div>
         </div>
       </div>
-    </div>
+      
+      {showCreatePrompt && (
+        <CreatePromptModal
+          onClose={() => setShowCreatePrompt(false)}
+          onSave={handlePromptCreated}
+        />
+      )}
+    </>
   );
 };

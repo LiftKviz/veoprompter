@@ -70,6 +70,14 @@ export const PromptList: React.FC<PromptListProps> = ({ category, searchQuery = 
     chrome.storage.local.set({ savedPrompts: updatedSaved });
   };
 
+  const handleRemovePrompt = async (prompt: Prompt) => {
+    const updatedSaved = savedPrompts.filter(p => p.id !== prompt.id);
+    setSavedPrompts(updatedSaved);
+    
+    // Update chrome storage
+    chrome.storage.local.set({ savedPrompts: updatedSaved });
+  };
+
   const allPrompts = category === 'my-prompts' ? savedPrompts : prompts;
   const displayPrompts = filterPrompts(allPrompts);
 
@@ -122,6 +130,7 @@ export const PromptList: React.FC<PromptListProps> = ({ category, searchQuery = 
               key={prompt.id}
               prompt={prompt}
               onSave={category !== 'my-prompts' ? handleSavePrompt : undefined}
+              onRemove={category === 'my-prompts' ? handleRemovePrompt : undefined}
               isSaved={category === 'my-prompts'}
             />
           ))}

@@ -1,0 +1,371 @@
+/**
+ * Authentication and Access Control Service
+ * Manages user state, API keys, and feature access
+ */
+
+export type UserTier = 'anonymous' | 'free' | 'paid';
+
+export interface UserState {
+  isSignedIn: boolean;
+  tier: UserTier;
+  email?: string;
+  userId?: string;
+  dailyModificationsUsed: number;
+  lastResetDate: string; // ISO date string for tracking daily reset
+  hasApiKey?: boolean;
+  subscription?: {
+    status: 'active' | 'expired' | 'cancelled';
+    plan: string;
+    expiresAt?: string;
+  };
+}
+
+export interface FeatureAccess {
+  viewPrompts: boolean;
+  copyPrompts: boolean;
+  savePrompts: boolean;
+  modifyPrompts: boolean;
+  createPrompts: boolean;
+  createSequences: boolean;
+  unlimitedUsage: boolean;
+}
+
+class AuthService {
+  private userState: UserState = {
+    isSignedIn: false,
+    tier: 'anonymous',
+    dailyModificationsUsed: 0,
+    lastResetDate: new Date().toISOString().split('T')[0]
+  };
+  
+  private readonly DAILY_FREE_MODIFICATIONS = 3;
+
+  private listeners: Set<(state: UserState) => void> = new Set();
+
+  constructor() {
+    this.loadUserState();
+    
+    // Listen for storage changes
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area === 'local') {
+        if (changes.user || changes.apiKey) {
+          this.loadUserState();
+        }
+      }
+    });
+  }
+
+  /**
+   * Load user state from storage
+   */
+  private async loadUserState() {
+    try {
+      const stored = await chrome.storage.local.get(['user', 'dailyUsage', 'subscription']);
+      
+      // Check if user is signed in (using existing GoogleAuth data)
+      if (stored.user && stored.user.email) {
+        this.userState.isSignedIn = true;
+        this.userState.email = stored.user.email;
+        this.userState.userId = stored.user.email;
+        this.userState.tier = 'free'; // Default to free tier
+      }
+      
+      // Load daily usage data
+      if (stored.dailyUsage) {
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Reset counter if it's a new day
+        if (stored.dailyUsage.date !== today) {
+          this.userState.dailyModificationsUsed = 0;
+          this.userState.lastResetDate = today;
+          await this.saveDailyUsage();
+        } else {
+          this.userState.dailyModificationsUsed = stored.dailyUsage.count || 0;
+          this.userState.lastResetDate = stored.dailyUsage.date;
+        }
+      }
+      
+      // Check subscription status
+      if (stored.subscription && stored.subscription.status === 'active') {
+        this.userState.tier = 'paid';
+        this.userState.subscription = stored.subscription;
+      }
+
+      this.notifyListeners();
+    } catch (error) {
+      console.error('Failed to load user state:', error);
+    }
+  }
+  
+  /**
+   * Save daily usage to storage
+   */
+  private async saveDailyUsage() {
+    await chrome.storage.local.set({
+      dailyUsage: {
+        date: this.userState.lastResetDate,
+        count: this.userState.dailyModificationsUsed
+      }
+    });
+  }
+
+  /**
+   * Get current user state
+   */
+  getUserState(): UserState {
+    return { ...this.userState };
+  }
+
+  /**
+   * Get feature access based on user tier
+   */
+  getFeatureAccess(): FeatureAccess {
+    const tier = this.userState.tier;
+    const hasRemainingMods = this.userState.dailyModificationsUsed < this.DAILY_FREE_MODIFICATIONS;
+
+    switch (tier) {
+      case 'anonymous':
+        return {
+          viewPrompts: true,
+          copyPrompts: true,
+          savePrompts: false,
+          modifyPrompts: false,
+          createPrompts: false,
+          createSequences: false,
+          unlimitedUsage: false
+        };
+
+      case 'free':
+        return {
+          viewPrompts: true,
+          copyPrompts: true,
+          savePrompts: true,
+          modifyPrompts: hasRemainingMods, // Can modify if under daily limit
+          createPrompts: hasRemainingMods,  // Can create if under daily limit
+          createSequences: true, // Sequences don't use AI
+          unlimitedUsage: false
+        };
+
+      case 'paid':
+        return {
+          viewPrompts: true,
+          copyPrompts: true,
+          savePrompts: true,
+          modifyPrompts: true,
+          createPrompts: true,
+          createSequences: true,
+          unlimitedUsage: true
+        };
+
+      default:
+        return {
+          viewPrompts: true,
+          copyPrompts: true,
+          savePrompts: false,
+          modifyPrompts: false,
+          createPrompts: false,
+          createSequences: false,
+          unlimitedUsage: false
+        };
+    }
+  }
+
+  /**
+   * Check if a specific feature is accessible
+   */
+  canAccess(feature: keyof FeatureAccess): boolean {
+    const access = this.getFeatureAccess();
+    return access[feature];
+  }
+
+  /**
+   * Get appropriate upgrade message for locked feature
+   */
+  getUpgradeMessage(feature: keyof FeatureAccess): string {
+    if (!this.userState.isSignedIn) {
+      if (feature === 'savePrompts') {
+        return 'Sign up to save your favorite prompts';
+      }
+      return 'Sign up for free to unlock this feature';
+    }
+
+    // User is signed in but may need a subscription for premium limits
+    const messages: Record<string, string> = {
+      modifyPrompts: 'Upgrade to Pro to increase your daily modification limit',
+      createPrompts: 'Upgrade to Pro to increase your daily creation limit',
+      createSequences: 'Upgrade to Pro to access advanced sequence features',
+      unlimitedUsage: 'Upgrade to Pro for unlimited usage'
+    };
+
+    return messages[feature] || 'Upgrade to access this feature';
+  }
+
+  /**
+   * Sign in with Google
+   */
+  async signInWithGoogle(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      chrome.identity.getAuthToken({ interactive: true }, async (token) => {
+        if (chrome.runtime.lastError || !token) {
+          reject(new Error(chrome.runtime.lastError?.message || 'Sign in failed'));
+          return;
+        }
+
+        try {
+          // Get user info from Google
+          const response = await fetch('https://www.googleapis.com/oauth2/v1/userinfo', {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to get user info');
+          }
+
+          const userInfo = await response.json();
+
+          // Update user state
+          this.userState = {
+            isSignedIn: true,
+            tier: 'free',
+            email: userInfo.email,
+            userId: userInfo.id,
+            hasApiKey: this.userState.hasApiKey,
+            dailyModificationsUsed: 0,
+            lastResetDate: new Date().toISOString().split('T')[0]
+          };
+
+          // Save to storage
+          await chrome.storage.local.set({ userState: this.userState });
+          
+          this.notifyListeners();
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
+      });
+    });
+  }
+
+  /**
+   * Sign out
+   */
+  async signOut(): Promise<void> {
+    // Clear cached auth token
+    chrome.identity.clearAllCachedAuthTokens(() => {
+      console.log('Signed out successfully');
+    });
+
+    // Reset user state
+    this.userState = {
+      isSignedIn: false,
+      tier: 'anonymous',
+      hasApiKey: false
+    };
+
+    // Clear from storage
+    await chrome.storage.local.remove(['userState']);
+    
+    this.notifyListeners();
+  }
+
+  /**
+   * Upgrade to paid subscription
+   */
+  async upgradeToPaid(subscriptionData: any): Promise<void> {
+    this.userState.tier = 'paid';
+    this.userState.subscription = {
+      status: 'active',
+      plan: subscriptionData.plan || 'pro',
+      expiresAt: subscriptionData.expiresAt
+    };
+    
+    await chrome.storage.local.set({ subscription: this.userState.subscription });
+    this.notifyListeners();
+  }
+
+  /**
+   * Subscribe to user state changes
+   */
+  subscribe(callback: (state: UserState) => void): () => void {
+    this.listeners.add(callback);
+    
+    // Return unsubscribe function
+    return () => {
+      this.listeners.delete(callback);
+    };
+  }
+
+  /**
+   * Notify all listeners of state change
+   */
+  private notifyListeners() {
+    const state = this.getUserState();
+    this.listeners.forEach(callback => callback(state));
+  }
+
+  /**
+   * Track a modification usage
+   */
+  async trackModification(): Promise<boolean> {
+    // Check if it's a new day and reset if needed
+    const today = new Date().toISOString().split('T')[0];
+    if (this.userState.lastResetDate !== today) {
+      this.userState.dailyModificationsUsed = 0;
+      this.userState.lastResetDate = today;
+    }
+    
+    // Paid users have unlimited usage
+    if (this.userState.tier === 'paid') {
+      return true;
+    }
+    
+    // Check if user has remaining modifications
+    if (this.userState.dailyModificationsUsed >= this.DAILY_FREE_MODIFICATIONS) {
+      return false;
+    }
+    
+    // Increment usage
+    this.userState.dailyModificationsUsed++;
+    await this.saveDailyUsage();
+    this.notifyListeners();
+    
+    return true;
+  }
+  
+  /**
+   * Get remaining modifications for today
+   */
+  getRemainingModifications(): number {
+    if (this.userState.tier === 'paid') {
+      return -1; // Unlimited
+    }
+    
+    // Check if it's a new day
+    const today = new Date().toISOString().split('T')[0];
+    if (this.userState.lastResetDate !== today) {
+      return this.DAILY_FREE_MODIFICATIONS;
+    }
+    
+    return Math.max(0, this.DAILY_FREE_MODIFICATIONS - this.userState.dailyModificationsUsed);
+  }
+
+  /**
+   * Check if user needs to upgrade
+   */
+  needsUpgrade(): boolean {
+    return this.userState.tier === 'free' && 
+           this.userState.dailyModificationsUsed >= this.DAILY_FREE_MODIFICATIONS;
+  }
+}
+
+// Export singleton instance
+export const authService = new AuthService();
+
+// Expose for debugging in development
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  (window as any).__authService = authService;
+}
+
+export default authService;

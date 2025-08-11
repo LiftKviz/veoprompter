@@ -24,23 +24,37 @@ class PromptDataService {
    * Initialize and load prompts from best available source
    */
   async initialize(): Promise<Prompt[]> {
-    // First try Firebase if enabled
-    const firebaseEnabled = await firebaseService.isFirebaseEnabled();
-    if (firebaseEnabled) {
-      const firebasePrompts = await this.loadFromFirebase();
-      if (firebasePrompts.length > 0) {
-        return firebasePrompts;
+    console.log('🔄 Starting prompt data initialization...');
+    
+    // Skip Firebase for now and go straight to admin dashboard
+    try {
+      console.log('📊 Trying admin dashboard first...');
+      const adminPrompts = await this.loadFromAdminDashboard();
+      if (adminPrompts.length > 0) {
+        console.log(`✅ Loaded ${adminPrompts.length} prompts from admin dashboard`);
+        this.prompts = adminPrompts;
+        this.loaded = true;
+        return adminPrompts;
       }
+    } catch (error) {
+      console.warn('❌ Admin dashboard failed:', error);
     }
 
-    // Then try admin dashboard
-    const adminPrompts = await this.loadFromAdminDashboard();
-    if (adminPrompts.length > 0) {
-      return adminPrompts;
+    // Fallback to local prompts.txt
+    try {
+      console.log('📋 Falling back to prompts.txt...');
+      const txtPrompts = await this.loadFromPromptsFile();
+      console.log(`✅ Loaded ${txtPrompts.length} prompts from prompts.txt`);
+      this.prompts = txtPrompts;
+      this.loaded = true;
+      return txtPrompts;
+    } catch (error) {
+      console.error('❌ All data sources failed:', error);
+      const defaultPrompts = this.getDefaultPrompts();
+      this.prompts = defaultPrompts;
+      this.loaded = true;
+      return defaultPrompts;
     }
-
-    // Finally fallback to local file
-    return this.loadFromPromptsFile();
   }
 
   /**
@@ -79,74 +93,66 @@ class PromptDataService {
    * Load prompts from admin dashboard data file
    */
   async loadFromAdminDashboard(): Promise<Prompt[]> {
-    try {
-      // Try to load the admin dashboard prompts JSON data
-      const response = await fetch('/admin-dashboard/prompts-data.json');
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const jsonData = await response.json();
-      console.log('Fetched admin dashboard JSON data');
-      
-      if (jsonData && jsonData.prompts && Array.isArray(jsonData.prompts)) {
-        const promptsData = jsonData.prompts as AdminPrompt[];
-        console.log(`Loaded ${promptsData.length} prompts from admin dashboard`);
-        
-        this.prompts = promptsData.map((p, index) => ({
-          id: `admin-${index + 1}`,
-          category: p.category as CategoryType,
-          title: p.title,
-          prompt: p.prompt,
-          youtubeLink: p.youtubeLink,
-          dateAdded: new Date().toISOString(),
-          isCustom: false
-        }));
-        
-        this.loaded = true;
-        return this.prompts;
-      }
-    } catch (error) {
-      console.warn('Failed to load admin dashboard JSON prompts:', error);
-      console.log('Falling back to prompts.txt');
+    // Try to load the admin dashboard prompts JSON data
+    const response = await fetch('/admin-dashboard/prompts-data.json');
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
-
-    // Fallback to loading from prompts.txt
-    return this.loadFromPromptsFile();
+    
+    const jsonData = await response.json();
+    console.log('Fetched admin dashboard JSON data');
+    
+    if (jsonData && jsonData.prompts && Array.isArray(jsonData.prompts)) {
+      const promptsData = jsonData.prompts as AdminPrompt[];
+      console.log(`Converting ${promptsData.length} admin prompts to internal format`);
+      
+      const convertedPrompts = promptsData.map((p, index) => ({
+        id: `admin-${index + 1}`,
+        category: p.category as CategoryType,
+        title: p.title,
+        prompt: p.prompt,
+        youtubeLink: p.youtubeLink,
+        dateAdded: new Date().toISOString(),
+        isCustom: false
+      }));
+      
+      console.log(`✅ Successfully converted ${convertedPrompts.length} prompts`);
+      return convertedPrompts;
+    } else {
+      throw new Error('Invalid JSON structure - prompts not found or not array');
+    }
   }
 
   /**
    * Load prompts from prompts.txt file
    */
   async loadFromPromptsFile(): Promise<Prompt[]> {
-    try {
-      const response = await fetch('/data/prompts.txt');
-      const text = await response.text();
-      
-      const lines = text.split('\n').filter(line => 
-        line.trim() && !line.startsWith('#')
-      );
-
-      this.prompts = lines.map((line, index) => {
-        const [category, title, prompt, youtubeLink] = line.split('|').map(s => s.trim());
-        return {
-          id: `prompt-${index + 1}`,
-          category: category as CategoryType,
-          title,
-          prompt,
-          youtubeLink: youtubeLink || undefined,
-          dateAdded: new Date().toISOString(),
-          isCustom: false
-        };
-      }).filter(p => p.title && p.prompt);
-
-      console.log(`Loaded ${this.prompts.length} prompts from prompts.txt`);
-      this.loaded = true;
-      return this.prompts;
-    } catch (error) {
-      console.error('Failed to load prompts:', error);
-      return this.getDefaultPrompts();
+    const response = await fetch('/data/prompts.txt');
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
+    
+    const text = await response.text();
+    
+    const lines = text.split('\n').filter(line => 
+      line.trim() && !line.startsWith('#')
+    );
+
+    const convertedPrompts = lines.map((line, index) => {
+      const [category, title, prompt, youtubeLink] = line.split('|').map(s => s.trim());
+      return {
+        id: `prompt-${index + 1}`,
+        category: category as CategoryType,
+        title,
+        prompt,
+        youtubeLink: youtubeLink || undefined,
+        dateAdded: new Date().toISOString(),
+        isCustom: false
+      };
+    }).filter(p => p.title && p.prompt);
+
+    console.log(`✅ Successfully parsed ${convertedPrompts.length} prompts from prompts.txt`);
+    return convertedPrompts;
   }
 
   /**

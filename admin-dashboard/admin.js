@@ -3,6 +3,21 @@
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+// Handle redirect-based sign-in results (needed when popup is blocked or fallback used)
+auth.getRedirectResult()
+  .then((result) => {
+    if (result && result.user) {
+      console.log('Redirect sign-in successful:', result.user.email);
+      // UI will update via onAuthStateChanged below
+    }
+  })
+  .catch((error) => {
+    console.error('Redirect sign-in error:', error);
+    if (typeof showMessage === 'function') {
+      showMessage('Authentication failed after redirect: ' + (error.message || error.code || 'Unknown error'), 'error');
+    }
+  });
+
 // Set auth persistence
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
   .catch((error) => {
@@ -48,11 +63,21 @@ authBtn.addEventListener('click', async () => {
       
       // Handle specific errors
       if (error.code === 'auth/unauthorized-domain') {
-        showMessage('This domain is not authorized. Please contact the administrator to add this domain to Firebase.', 'error');
+        showMessage('This domain is not authorized. Please contact the administrator to add this domain to Firebase (Authorized domains).', 'error');
       } else if (error.code === 'auth/popup-blocked') {
-        showMessage('Popup was blocked. Please allow popups for this site.', 'error');
+        // Fallback to redirect if popup is blocked
+        showMessage('Popup was blocked. Redirecting to Google Sign-In...', 'info');
+        try {
+          await auth.signInWithRedirect(provider);
+          return;
+        } catch (redirectErr) {
+          console.error('Redirect sign-in error:', redirectErr);
+          showMessage('Redirect sign-in failed: ' + redirectErr.message, 'error');
+        }
       } else if (error.code === 'auth/cancelled-popup-request') {
         showMessage('Authentication cancelled.', 'error');
+      } else if (error.code === 'auth/popup-closed-by-user') {
+        showMessage('Sign-in popup was closed before completing sign in.', 'error');
       } else {
         showMessage('Authentication failed: ' + error.message, 'error');
       }

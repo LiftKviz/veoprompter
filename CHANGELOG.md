@@ -1,5 +1,83 @@
 # Veo 3 Prompt Assistant - Changelog
 
+## Version 1.0.1 - Security Hotfix (2025-08-10)
+
+### 🔐 Fixes
+- Removed hardcoded OpenAI API key from `src/services/gptService.ts`.
+- Routed GPT requests through backend proxy; no user API key needed.
+
+### 🔧 Metadata & Config
+- Bumped `public/manifest.json` and `package.json` versions to `1.0.1`.
+- Added Netlify function endpoint allowlist in `manifest.json` and CSP connect-src.
+
+### ⚠️ Action Required
+- Rotate the exposed OpenAI API key immediately in your OpenAI dashboard.
+- Consider purging the key from git history (e.g., using `git filter-repo` or BFG) and force-pushing.
+- Deploy a Netlify function at `/.netlify/functions/gpt` that calls OpenAI with your server-side key.
+
+### 🚩 Note about later entries
+- Entries labeled 1.1.0 and above in this file describe planned/roadmap work. The codebase will be updated or these notes will be revised to reflect actual shipped features.
+
+## Version 1.12.0 - Freemium Model & Full React Migration (2025-08-07)
+
+### 🚀 Major Features
+
+#### Freemium Model Implementation
+- **NEW**: 3 daily free AI modifications for signed-in users
+- **NEW**: AuthService with tier system (anonymous/free/paid)
+- **NEW**: Daily usage tracking with automatic reset
+- **NEW**: Smart upgrade prompts only when limits reached
+- **REMOVED**: BYOK (Bring Your Own Key) model complexity
+- **SIMPLIFIED**: Single API key for service (no user API keys needed)
+
+#### Chrome Side Panel Conversion  
+- **CONVERTED**: Extension from popup to Chrome Side Panel
+- **ADDED**: `sidePanel` permission and background click handler
+- **ENHANCED**: Responsive design for sidebar layout
+- **IMPROVED**: Subtle scrollbars and full-height layout
+
+#### Full React Migration Completion
+- **MIGRATED**: All remaining vanilla JS to React/TypeScript
+- **CREATED**: useAuth hook for consistent state management
+- **REMOVED**: Mixed React/vanilla JS architecture
+- **STANDARDIZED**: Modern React patterns throughout
+
+#### UX Improvements (Figma-Based Design)
+- **REDESIGNED**: Upgrade modal with subtle, minimal styling
+- **ADDED**: Clickable free tier badge and modification counter
+- **HIDDEN**: Subscription banner until actually needed (with close button)
+- **REFINED**: Color palette to match Figma design (#F8F9FA, #DADCE0, #6748B5)
+- **IMPROVED**: All animations and transitions made more subtle
+
+### 🛠️ Technical Improvements
+
+#### Services & Architecture
+- **CREATED**: `authService.ts` with comprehensive tier management
+- **ENHANCED**: `gptService.ts` with embedded API key for freemium
+- **UPDATED**: All components to use new auth system
+- **STREAMLINED**: Payment flow preparation (ExtPay integration ready)
+
+#### Component Enhancements
+- **REDESIGNED**: Settings modal as account/status page (no API key fields)
+- **UPDATED**: SubscriptionStatus component for freemium model
+- **ENHANCED**: Header with clickable upgrade elements
+- **IMPROVED**: All styling to match minimal design system
+
+### 🐛 Bug Fixes & Cleanup
+- **FIXED**: Prompt modification processing with proper API key
+- **RESOLVED**: Mixed authentication state issues
+- **CLEANED**: Consistent styling across all components
+- **OPTIMIZED**: Bundle size and performance
+
+### 📋 Technical Debt Identified
+- Placeholder payment URLs need ExtPay integration
+- Legacy paymentService.ts vs new authService.ts
+- Duplicate authService files (.js and .ts)
+- ExtPay initialization without UI connection
+- Environment variable usage inconsistency
+
+---
+
 ## Version 1.11.0 - Chrome Side Panel Integration & Modern UI Redesign (2025-08-06)
 
 ### 🚀 Major Features

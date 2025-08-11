@@ -53,7 +53,7 @@ class PaymentService {
   private isBackgroundScript(): boolean {
     return typeof chrome !== 'undefined' && 
            chrome.runtime && 
-           chrome.runtime.getManifest &&
+           typeof chrome.runtime.getManifest === 'function' &&
            !chrome.tabs;
   }
 

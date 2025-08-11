@@ -4,6 +4,13 @@ import { paymentService } from '../services/paymentService';
 declare const ExtPay: any;
 const extpay = typeof ExtPay !== 'undefined' ? ExtPay('veo-3-prompter') : null;
 
+// Handle opening the sidebar when extension icon is clicked
+chrome.action.onClicked.addListener(async (tab) => {
+  if (tab.id) {
+    await chrome.sidePanel.open({ tabId: tab.id });
+  }
+});
+
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.local.set({
     userLibrary: {

@@ -2,17 +2,18 @@ import React, { useState } from 'react';
 import { Prompt } from '@/types';
 import { GPTService } from '@/services/gptService';
 import { Toast } from '../common/Toast';
-import PaymentGate from '../common/PaymentGate';
-import { paymentService } from '@/services/paymentService';
+import { UpgradeModal } from '../common/UpgradeModal';
+import { useAuth } from '@/hooks/useAuth';
 import './PromptCard.css';
 
 interface PromptCardProps {
   prompt: Prompt;
   onSave?: (prompt: Prompt) => void;
+  onRemove?: (prompt: Prompt) => void;
   isSaved?: boolean;
 }
 
-export const PromptCard: React.FC<PromptCardProps> = ({ prompt, onSave, isSaved }) => {
+export const PromptCard: React.FC<PromptCardProps> = ({ prompt, onSave, onRemove, isSaved }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -20,6 +21,13 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt, onSave, isSaved 
   const [modifyInstruction, setModifyInstruction] = useState('');
   const [modifiedPrompt, setModifiedPrompt] = useState(prompt.prompt);
   const [isLoading, setIsLoading] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeFeature, setUpgradeFeature] = useState('');
+  const [upgradeMessage, setUpgradeMessage] = useState('');
+  const [showSequenceSelector, setShowSequenceSelector] = useState(false);
+  const [availableSequences, setAvailableSequences] = useState<any[]>([]);
+
+  const { userState, featureAccess, canAccess, getUpgradeMessage, signIn, trackModification, getRemainingModifications } = useAuth();
 
   const showToastMessage = (message: string) => {
     setToastMessage(message);
@@ -28,6 +36,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt, onSave, isSaved 
   };
 
   const handleCopy = async () => {
+    // Copy is always allowed for all users
     try {
       await navigator.clipboard.writeText(modifiedPrompt);
       showToastMessage('📋 Prompt copied to clipboard!');
@@ -55,10 +64,31 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt, onSave, isSaved 
     }
   };
 
+  const handleModifyClick = () => {
+    if (!canAccess('modifyPrompts')) {
+      setUpgradeFeature('AI Prompt Modification');
+      setUpgradeMessage(getUpgradeMessage('modifyPrompts'));
+      setShowUpgradeModal(true);
+      return;
+    }
+    setIsModifying(true);
+  };
+
   const handleModify = async () => {
     if (!modifyInstruction.trim()) {
       showToastMessage('📝 Please enter a modification instruction');
       return;
+    }
+
+    // Track usage for free users
+    if (userState.tier === 'free') {
+      const canTrack = await trackModification();
+      if (!canTrack) {
+        setUpgradeFeature('Daily Limit Reached');
+        setUpgradeMessage('You\'ve used all 3 free modifications today. Upgrade for unlimited access!');
+        setShowUpgradeModal(true);
+        return;
+      }
     }
 
     setIsLoading(true);
@@ -72,7 +102,15 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt, onSave, isSaved 
       setModifiedPrompt(modifiedText);
       setIsModifying(false);
       setModifyInstruction('');
-      showToastMessage('✨ Prompt modified successfully!');
+      
+      const remaining = getRemainingModifications();
+      if (userState.tier === 'free' && remaining > 0) {
+        showToastMessage(`✨ Prompt modified! ${remaining} free modifications left today.`);
+      } else if (userState.tier === 'free' && remaining === 0) {
+        showToastMessage('✨ Prompt modified! That was your last free modification for today.');
+      } else {
+        showToastMessage('✨ Prompt modified successfully!');
+      }
     } catch (error) {
       console.error('Failed to modify prompt:', error);
       const errorMessage = error instanceof Error ? error.message : '❌ Failed to modify prompt';
@@ -93,18 +131,72 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt, onSave, isSaved 
   const handleSave = async () => {
     if (!onSave) return;
 
-    // Check if user can save more prompts
-    const canTrack = await paymentService.trackUsage('saved_prompt');
-    if (!canTrack) {
-      const remaining = await paymentService.getRemainingUsage('saved_prompt');
-      if (remaining === 0) {
-        showToastMessage('💎 Save Limit Reached: Upgrade to Premium for unlimited saved prompts!');
-        return;
-      }
+    // Check if user can save prompts
+    if (!canAccess('savePrompts')) {
+      setUpgradeFeature('Save Prompts');
+      setUpgradeMessage(getUpgradeMessage('savePrompts'));
+      setShowUpgradeModal(true);
+      return;
     }
 
     onSave(prompt);
     showToastMessage('⭐ Prompt saved successfully!');
+  };
+
+  const handleRemove = () => {
+    if (!onRemove) return;
+    
+    if (confirm('Are you sure you want to remove this prompt from your collection?')) {
+      onRemove(prompt);
+      showToastMessage('🗑️ Prompt removed from My Prompts');
+    }
+  };
+
+  const handleAddToSequence = async () => {
+    // Check if user can create sequences
+    if (!canAccess('createSequences')) {
+      setUpgradeFeature('Sequences');
+      setUpgradeMessage(getUpgradeMessage('createSequences'));
+      setShowUpgradeModal(true);
+      return;
+    }
+
+    // Get existing sequences
+    const result = await chrome.storage.local.get(['sequences']);
+    const sequences = result.sequences || [];
+    
+    if (sequences.length === 0) {
+      showToastMessage('📝 Create a sequence first in the Sequences menu');
+      return;
+    }
+
+    // Show sequence selector modal
+    setAvailableSequences(sequences);
+    setShowSequenceSelector(true);
+  };
+
+  const handleSequenceSelection = async (selectedSequence: any) => {
+    selectedSequence.prompts.push(prompt);
+    
+    const result = await chrome.storage.local.get(['sequences']);
+    const sequences = result.sequences || [];
+    const updatedSequences = sequences.map((seq: any) => 
+      seq.id === selectedSequence.id ? selectedSequence : seq
+    );
+    
+    await chrome.storage.local.set({ sequences: updatedSequences });
+    showToastMessage(`🎬 Added to "${selectedSequence.name}"`);
+    setShowSequenceSelector(false);
+  };
+
+  const handleAddApiKey = () => {
+    // This would open an API key input modal (to be implemented)
+    showToastMessage('API key management coming soon!');
+  };
+
+  const handleUpgrade = () => {
+    // This would redirect to payment page
+    showToastMessage('Upgrade flow coming soon!');
   };
 
   return (
@@ -175,27 +267,20 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt, onSave, isSaved 
                 >
                   📋 Copy
                 </button>
-                <PaymentGate 
-                  feature="gpt_modification" 
-                  fallback={
-                    <button 
-                      className="action-button disabled" 
-                      disabled
-                      aria-label="Modify prompt (Premium feature)"
-                    >
-                      ✏️ Modify (Premium)
-                    </button>
-                  }
-                  showUpgradePrompt={false}
+                <button 
+                  className={`action-button ${!canAccess('createSequences') ? 'locked' : ''}`}
+                  onClick={handleAddToSequence}
+                  aria-label="Add to sequence"
                 >
-                  <button 
-                    className="action-button" 
-                    onClick={() => setIsModifying(true)}
-                    aria-label="Modify this prompt using AI"
-                  >
-                    ✏️ Modify
-                  </button>
-                </PaymentGate>
+                  🎬 Add to Sequence
+                </button>
+                <button 
+                  className={`action-button ${!canAccess('modifyPrompts') ? 'locked' : ''}`}
+                  onClick={handleModifyClick}
+                  aria-label={canAccess('modifyPrompts') ? 'Modify this prompt using AI' : 'Modify prompt (requires API key or subscription)'}
+                >
+                  ✏️ Modify {!canAccess('modifyPrompts') && '🔒'}
+                </button>
                 <button 
                   className="action-button" 
                   onClick={handlePreview}
@@ -212,6 +297,15 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt, onSave, isSaved 
                     ⭐ Save
                   </button>
                 )}
+                {onRemove && (
+                  <button 
+                    className="action-button remove-prompt-btn" 
+                    onClick={handleRemove}
+                    aria-label="Remove prompt from My Prompts"
+                  >
+                    🗑️ Remove
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -219,6 +313,46 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt, onSave, isSaved 
       </div>
       
       {showToast && <Toast message={toastMessage} />}
+      
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        feature={upgradeFeature}
+        message={upgradeMessage}
+        userState={userState}
+        onSignIn={signIn}
+        onAddApiKey={handleAddApiKey}
+        onUpgrade={handleUpgrade}
+      />
+      
+      {showSequenceSelector && (
+        <div className="sequence-selector-modal">
+          <div className="modal-content">
+            <h3>Select Sequence</h3>
+            <p>Choose which sequence to add this prompt to:</p>
+            <div className="sequences-list">
+              {availableSequences.map((sequence) => (
+                <button
+                  key={sequence.id}
+                  className="sequence-option"
+                  onClick={() => handleSequenceSelection(sequence)}
+                >
+                  <div className="sequence-info">
+                    <strong>{sequence.name}</strong>
+                    <span>{sequence.prompts.length} prompts</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+            <button 
+              className="cancel-sequence-btn"
+              onClick={() => setShowSequenceSelector(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 };

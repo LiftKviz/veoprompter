@@ -1,7 +1,8 @@
 import { GPTModifyRequest } from '@/types';
-import { paymentService } from './paymentService';
 
-const GPT_API_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
+// Backend proxy endpoints (server-side holds the OpenAI API key)
+const GPT_PROXY_ENDPOINT_PROD = 'https://veo-prompt-assistant.netlify.app/.netlify/functions/gpt';
+const GPT_PROXY_ENDPOINT_DEV = 'http://localhost:8888/.netlify/functions/gpt';
 
 // Declare SecureStorage for encrypted API key storage
 declare const SecureStorage: any;
@@ -40,20 +41,73 @@ export class GPTService {
   }
 
   private generateSystemPrompt(_knowledgeBase?: any): string {
-    // Reserved for future use when knowledge base is loaded
-    // const veoSpecific = _knowledgeBase?.video_knowledge_base?.veo_3_specific;
-    
-    return `You are an expert AI prompt engineer specializing in Google Veo 3. Transform ideas into prompts using the SSASA framework:
+    return `You are an expert Veo 3 video prompt generator. Your task is to create detailed, effective prompts for Google's Veo 3 video generation model based on user descriptions or ideas.
 
-1) SUBJECT: Clearly identify who/what is the focus with specific details (e.g., 'grizzled detective in rumpled trench coat' not 'a man')
-2) SCENE: Describe environment in detail - where and when action occurs (e.g., 'dusty attic with afternoon light through grimy window')
-3) ACTION: Define what subject is doing with strong verbs, chain actions with 'this happens, then that happens'
-4) STYLE: Specify visual aesthetic (e.g., '1990s VHS footage', '8-bit video game', 'claymation', 'filmed on 16mm')
-5) AUDIO: Explicitly describe all sounds - dialogue, ambient sounds, SFX, and music (Veo 3's signature feature)
+IMPORTANT: Always output your response as valid JSON with the following structure:
+{
+  "prompt": "the complete Veo 3 prompt",
+  "visual_elements": {
+    "subject": "description of who/what is in the scene",
+    "context": "where the scene takes place",
+    "action": "what is happening",
+    "style": "visual aesthetic (e.g., cinematic, animated, stop-motion)",
+    "camera_motion": "how the camera moves",
+    "composition": "how the shot is framed",
+    "ambiance": "mood and lighting"
+  },
+  "audio_elements": {
+    "dialogue": "what characters say (if any)",
+    "ambient_sound": "background noise",
+    "sound_effects": "specific sounds",
+    "music": "musical elements (if any)"
+  },
+  "technical_notes": {
+    "subtitles": "whether to include '(no subtitles)' directive",
+    "pronunciation_hints": "phonetic spellings if needed",
+    "character_consistency": "detailed character descriptions for consistency"
+  }
+}
 
-For dialogue, use format: "Character Name says (with emotional tone): 'Exact words.'" - This prevents mixing up speakers.
+PROMPT CONSTRUCTION GUIDELINES:
+1. VISUAL ELEMENTS - Include all relevant details:
+   - Subject: Be specific about appearance, clothing, age, expressions
+   - Context: Describe the location in detail (indoor/outdoor, specific place)
+   - Action: Clear description of movement and behavior
+   - Style: Choose appropriate visual style (default is professional live-action)
+   - Camera motion: Use cinematography terms (dolly, zoom, pan, tracking, aerial, eye-level, etc.)
+   - Composition: Specify framing (wide shot, close-up, medium shot)
+   - Ambiance: Describe lighting, mood, color tones
 
-Include negative prompt (no subtitles, no on-screen text) unless requested. Keep modifications concise and focused on the user's instruction while maintaining Veo 3 best practices.`;
+2. AUDIO ELEMENTS - Be explicit about all sounds:
+   - Dialogue: Use format "Character says: [exact words]" or describe what they talk about
+   - Keep dialogue under 8 seconds worth of speech
+   - Ambient sound: Specify background noise appropriate to the scene
+   - Sound effects: List any specific sounds needed
+   - Music: Describe genre, mood, and style if music is needed
+
+3. SPECIAL CONSIDERATIONS:
+   - For dialogue, use colon format: "Person says: words" (not quotes)
+   - Add "(no subtitles)" to prevent unwanted text overlays
+   - Use phonetic spelling for proper names or unusual pronunciations
+   - For selfie-style videos, start with "A selfie video of..." and mention visible arm
+   - For character consistency across scenes, repeat exact character descriptions
+   - Specify who speaks in multi-character scenes to avoid confusion
+
+4. PROMPT LENGTH:
+   - Create detailed prompts (100-200 words typically)
+   - More detail = better control over output
+   - Include negative instructions when needed (e.g., "no subtitles", "no laugh track")
+
+5. STYLE VARIATIONS:
+   - Default: Professional live-action video
+   - Available styles: animated, stop-motion, claymation, hand-drawn, watercolor, cinematic, documentary, found footage, etc.
+   - Style affects both visuals and character movement
+
+Remember:
+- Veo 3 produces consistent outputs for identical prompts
+- Change prompts significantly for variety
+- Be specific about what you want to avoid hallucinations
+- Layer multiple elements for rich, compelling videos`;
   }
 
   async setApiKey(key: string): Promise<void> {
@@ -109,26 +163,7 @@ Include negative prompt (no subtitles, no on-screen text) unless requested. Keep
   }
 
   async modifyPrompt(request: GPTModifyRequest): Promise<string> {
-    // Check payment access first
-    const canUseFeature = await paymentService.canUseFeature('gpt_modification');
-    if (!canUseFeature) {
-      throw new Error('💎 Premium Feature: AI prompt modification requires a Premium subscription. Upgrade to unlock unlimited modifications!');
-    }
-
-    // Check usage limits for free users
-    const canTrackUsage = await paymentService.trackUsage('gpt_modification');
-    if (!canTrackUsage) {
-      const remaining = await paymentService.getRemainingUsage('gpt_modification');
-      if (remaining === 0) {
-        throw new Error('⏰ Daily Limit Reached: You\'ve used all your AI modifications for today. Upgrade to Premium for unlimited access!');
-      }
-    }
-
-    const apiKey = await this.getApiKey();
-    
-    if (!apiKey) {
-      throw new Error('🔑 API key required: Please add your OpenAI API key in settings to use prompt modification features.');
-    }
+    // No user API key required. Requests are routed through a secure backend proxy.
 
     if (!request.instruction?.trim()) {
       throw new Error('📝 Modification instruction required: Please describe how you want to modify the prompt.');
@@ -139,56 +174,73 @@ Include negative prompt (no subtitles, no on-screen text) unless requested. Keep
     const systemPrompt = this.generateSystemPrompt(knowledgeBase);
 
     try {
-      const response = await fetch(GPT_API_ENDPOINT, {
+      let response = await fetch(GPT_PROXY_ENDPOINT_PROD, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           model: 'gpt-4o',
-          messages: [
-            {
-              role: 'system',
-              content: systemPrompt
-            },
-            {
-              role: 'user',
-              content: `Original prompt: "${request.prompt}"\n\nModification instruction: "${request.instruction}"\n\nPlease modify the prompt according to the instruction using the SSASA framework.`
-            }
-          ],
+          systemPrompt,
+          prompt: request.prompt,
+          instruction: request.instruction,
           temperature: 0.7,
-          max_tokens: 800
+          maxTokens: 800
         })
       });
+
+      // If production endpoint fails due to network (e.g., offline or not deployed), try local dev server
+      if (!response.ok && typeof window !== 'undefined') {
+        try {
+          response = await fetch(GPT_PROXY_ENDPOINT_DEV, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: 'gpt-4o',
+              systemPrompt,
+              prompt: request.prompt,
+              instruction: request.instruction,
+              temperature: 0.7,
+              maxTokens: 800
+            })
+          });
+        } catch (_devErr) {
+          // swallow to fall through to unified error handling below
+        }
+      }
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         const errorMessage = errorData.error?.message;
-        
-        // Handle specific API errors with actionable messages
         if (response.status === 401) {
-          throw new Error('🔐 Invalid API key: Please check your OpenAI API key in settings and ensure it\'s valid.');
+          throw new Error('🔐 Unauthorized: Backend API key invalid or missing.');
         } else if (response.status === 403) {
-          throw new Error('🚫 Access denied: Your API key doesn\'t have permission to access GPT-4. Please check your OpenAI account.');
+          throw new Error('🚫 Access denied by backend.');
         } else if (response.status === 429) {
-          throw new Error('⏰ Rate limit exceeded: Please wait a moment and try again. Consider upgrading your OpenAI plan for higher limits.');
-        } else if (response.status === 500) {
-          throw new Error('🔧 OpenAI server error: Please try again in a few moments.');
-        } else if (response.status >= 400 && response.status < 500) {
-          throw new Error(`❌ Request error: ${errorMessage || 'Please check your request and try again.'}`);
-        } else {
-          throw new Error(`🌐 Network error: ${errorMessage || 'Please check your internet connection and try again.'}`);
+          throw new Error('⏰ Rate limit exceeded. Please try again later.');
+        } else if (response.status >= 500) {
+          throw new Error('🔧 Server error: Please try again shortly.');
         }
+        throw new Error(`❌ Request error: ${errorMessage || 'Please try again.'}`);
       }
 
       const data = await response.json();
       
-      if (!data.choices?.[0]?.message?.content) {
+      if (!data?.content) {
         throw new Error('📭 Empty response: The AI didn\'t generate a response. Please try again with a different instruction.');
       }
       
-      return data.choices[0].message.content.trim();
+      // Try to parse as JSON to extract the prompt
+      try {
+        const parsed = JSON.parse(data.content);
+        if (parsed.prompt) {
+          return String(parsed.prompt).trim();
+        }
+      } catch (e) {
+        // If not JSON or no prompt field, return as-is
+      }
+      
+      return String(data.content).trim();
     } catch (error) {
       console.error('GPT API error:', error);
       

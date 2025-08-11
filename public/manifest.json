@@ -1,19 +1,22 @@
 {
   "manifest_version": 3,
   "name": "Veo 3 Prompt Assistant",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Discover and manage prompt templates for Veo 3 video creation",
   "permissions": [
     "storage",
     "clipboardWrite",
     "identity",
-    "tabs"
+    "tabs",
+    "sidePanel"
   ],
   "host_permissions": [
     "https://api.openai.com/*",
     "https://www.googleapis.com/*",
     "https://accounts.google.com/*",
-    "https://extensionpay.com/*"
+    "https://extensionpay.com/*",
+    "https://veo-prompt-assistant.netlify.app/*",
+    "http://localhost:8888/*"
   ],
   "oauth2": {
     "client_id": "374428444834-8n6q86s3scnmlpc4t2dsj1mvee76fi1t.apps.googleusercontent.com",
@@ -23,13 +26,15 @@
     ]
   },
   "action": {
-    "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon16.svg",
       "32": "icons/icon32.svg",
       "48": "icons/icon48.svg",
       "128": "icons/icon128.svg"
     }
+  },
+  "side_panel": {
+    "default_path": "popup.html"
   },
   "icons": {
     "16": "icons/icon16.svg",

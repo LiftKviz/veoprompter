@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { GPTService } from '@/services/gptService';
+import React from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import './Settings.css';
 
 interface SettingsProps {
@@ -7,44 +7,11 @@ interface SettingsProps {
 }
 
 export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
-  const [apiKey, setApiKey] = useState('');
-  const [showKey, setShowKey] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const { userState, getRemainingModifications } = useAuth();
 
-  useEffect(() => {
-    // Load existing API key
-    GPTService.getInstance().getApiKey().then(key => {
-      if (key) setApiKey(key);
-    });
-  }, []);
-
-  const handleSave = async () => {
-    try {
-      await GPTService.getInstance().setApiKey(apiKey);
-      
-      // Upgrade to BYOK tier if valid API key is provided
-      if (apiKey && typeof window !== 'undefined' && (window as any).tierService) {
-        const tierService = (window as any).tierService;
-        try {
-          await tierService.upgradeToBYOK(apiKey);
-          console.log('User upgraded to BYOK tier');
-        } catch (error) {
-          console.error('Failed to upgrade to BYOK tier:', error);
-        }
-      } else if (!apiKey && typeof window !== 'undefined' && (window as any).tierService) {
-        // Downgrade to free tier when API key is removed
-        const tierService = (window as any).tierService;
-        await tierService.setUserTier('free', null);
-      }
-      
-      setSaved(true);
-      setTimeout(() => {
-        setSaved(false);
-        onClose();
-      }, 1500);
-    } catch (error) {
-      console.error('Failed to save API key:', error);
-    }
+  const handleUpgrade = () => {
+    // TODO: Implement upgrade flow
+    window.open('https://your-upgrade-url.com', '_blank');
   };
 
   return (
@@ -56,7 +23,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
     >
       <div className="settings-modal">
         <div className="settings-header">
-          <h2 id="settings-title">Settings</h2>
+          <h2 id="settings-title">Account & Settings</h2>
           <button 
             className="close-button" 
             onClick={onClose}
@@ -67,37 +34,69 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
         </div>
         
         <div className="settings-content">
+          {/* Account Status */}
           <div className="setting-group">
-            <label htmlFor="api-key">OpenAI API Key</label>
-            <div className="api-key-input-group">
-              <input
-                id="api-key"
-                type={showKey ? 'text' : 'password'}
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="sk-..."
-                className="api-key-input"
-              />
-              <button 
-                className="toggle-visibility"
-                onClick={() => setShowKey(!showKey)}
-                aria-label={showKey ? 'Hide API key' : 'Show API key'}
-                type="button"
-              >
-                {showKey ? '🙈' : '👁️'}
+            <h3>Account Status</h3>
+            <div className="account-info">
+              <div className="status-item">
+                <span className="label">Plan:</span>
+                <span className={`status-badge tier-${userState.tier}`}>
+                  {userState.tier === 'paid' ? 'Pro' : userState.tier === 'free' ? 'Free' : 'Anonymous'}
+                </span>
+              </div>
+              
+              {userState.tier === 'free' && (
+                <div className="status-item">
+                  <span className="label">Daily Modifications:</span>
+                  <span className="usage-count">
+                    {getRemainingModifications()}/3 remaining
+                  </span>
+                </div>
+              )}
+              
+              {userState.isSignedIn && (
+                <div className="status-item">
+                  <span className="label">Status:</span>
+                  <span className="signed-in">✓ Signed In</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Upgrade Section */}
+          {userState.tier !== 'paid' && (
+            <div className="setting-group upgrade-section">
+              <h3>Upgrade to Pro</h3>
+              <div className="upgrade-features">
+                <div className="feature">✨ Unlimited prompt modifications</div>
+                <div className="feature">🎯 Priority support</div>
+                <div className="feature">🚀 Advanced features</div>
+              </div>
+              <button className="upgrade-button" onClick={handleUpgrade}>
+                Upgrade to Pro
               </button>
             </div>
-            <p className="setting-help">
-              Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">OpenAI Dashboard</a>
+          )}
+
+          {/* About */}
+          <div className="setting-group">
+            <h3>About</h3>
+            <p className="about-text">
+              Veo 3 Prompt Assistant helps you create better prompts for Google's Veo 3 video AI model.
             </p>
+            <div className="links">
+              <a href="https://github.com/your-repo" target="_blank" rel="noopener noreferrer">
+                GitHub
+              </a>
+              <a href="https://your-support-url.com" target="_blank" rel="noopener noreferrer">
+                Support
+              </a>
+            </div>
           </div>
         </div>
         
         <div className="settings-footer">
-          <button className="secondary" onClick={onClose}>Cancel</button>
-          <button className="primary" onClick={handleSave}>
-            {saved ? '✓ Saved' : 'Save'}
-          </button>
+          <button className="primary" onClick={onClose}>Close</button>
         </div>
       </div>
     </div>

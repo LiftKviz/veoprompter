@@ -1,36 +1,54 @@
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
 .create-prompt-modal {
   background: white;
   border-radius: 12px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  max-width: 500px;
-  width: 90%;
+  width: 100%;
+  max-width: 600px;w
   max-height: 90vh;
   overflow: hidden;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  animation: modalFadeIn 0.2s ease-out;
 }
 
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 24px 16px;
+  padding: 12px 24px 8px;
   border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
 }
 
 .modal-header h2 {
   margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #111827;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
 }
 
 .close-button {
   background: none;
   border: none;
-  font-size: 24px;
+  font-size: 20px;
   color: #6b7280;
   cursor: pointer;
-  padding: 4px;
+  padding: 2px;
   border-radius: 4px;
   transition: all 0.2s ease;
 }
@@ -41,16 +59,25 @@
 }
 
 .modal-body {
-  padding: 20px 24px 24px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .form-group {
   margin-bottom: 20px;
 }
 
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
 .form-group label {
   display: block;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
   color: #374151;
   margin-bottom: 8px;
@@ -64,8 +91,17 @@
   font-size: 14px;
   font-family: inherit;
   resize: vertical;
-  min-height: 100px;
+  min-height: 160px;
   transition: border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.result-textarea {
+  min-height: 300px;
+  height: auto;
+  line-height: 1.55;
+  font-size: 14px;
+  resize: none;
 }
 
 .description-input:focus {
@@ -90,17 +126,22 @@
   padding: 12px;
   border-radius: 8px;
   font-size: 14px;
-  margin-bottom: 20px;
+  margin-top: 12px;
 }
 
 .modal-actions {
+  flex-shrink: 0;
+  background: white;
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
   gap: 12px;
+  padding: 20px 24px 24px;
+  border-top: 1px solid #e5e7eb;
 }
 
 .modal-actions button {
-  padding: 10px 20px;
+  padding: 10px 16px;
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
@@ -109,12 +150,15 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  white-space: nowrap;
+  box-sizing: border-box;
 }
 
 .modal-actions button.secondary {
   background: white;
   border: 1px solid #d1d5db;
   color: #374151;
+  flex-shrink: 0;
 }
 
 .modal-actions button.secondary:hover:not(:disabled) {
@@ -126,6 +170,7 @@
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   border: none;
   color: white;
+  flex-shrink: 0;
 }
 
 .modal-actions button.primary:hover:not(:disabled) {
@@ -138,6 +183,17 @@
   opacity: 0.6;
   cursor: not-allowed;
   transform: none !important;
+}
+
+/* Button layout for initial view (2 buttons) */
+.modal-actions .button-group-left {
+  display: flex;
+  gap: 12px;
+}
+
+.modal-actions .button-group-right {
+  display: flex;
+  gap: 12px;
 }
 
 .loading-spinner {
@@ -155,25 +211,6 @@
   }
 }
 
-.modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
-}
-
-/* Animation */
-.create-prompt-modal {
-  animation: modalFadeIn 0.2s ease-out;
-}
-
 @keyframes modalFadeIn {
   from {
     opacity: 0;
@@ -182,5 +219,31 @@
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .create-prompt-modal {
+    max-width: calc(100vw - 32px);
+    margin: 16px;
+  }
+  
+  .modal-header {
+    padding: 16px 20px 12px;
+  }
+  
+  .modal-body {
+    padding: 16px 20px;
+  }
+  
+  .modal-actions {
+    padding: 16px 20px 20px;
+    flex-wrap: wrap;
+  }
+  
+  .modal-actions button {
+    padding: 8px 12px;
+    font-size: 13px;
   }
 }
