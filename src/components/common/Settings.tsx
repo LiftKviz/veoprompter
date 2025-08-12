@@ -69,11 +69,6 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
               )}
             </div>
             
-            {userState.isSignedIn && (
-              <button className="sign-out-button" onClick={handleSignOut}>
-                🚪 Sign Out
-              </button>
-            )}
           </div>
 
           {/* Upgrade Section */}
@@ -109,6 +104,11 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
         </div>
         
         <div className="settings-footer">
+          {userState.isSignedIn && (
+            <button className="sign-out-button" onClick={handleSignOut}>
+              🚪 Sign Out
+            </button>
+          )}
           <button className="primary" onClick={onClose}>Close</button>
         </div>
       </div>

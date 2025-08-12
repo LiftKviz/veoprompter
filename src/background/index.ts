@@ -1,4 +1,5 @@
 import { paymentService } from '../services/paymentService';
+import { GPTService } from '../services/gptService';
 
 // Initialize ExtPay directly in background
 declare const ExtPay: any;
@@ -46,6 +47,7 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
+
 chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
   if (request.type === 'GET_USER_LIBRARY') {
     chrome.storage.local.get(['userLibrary'], (result) => {
@@ -58,6 +60,52 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
     chrome.storage.local.set({ userLibrary: request.data }, () => {
       sendResponse({ success: true });
     });
+    return true;
+  }
+  
+  if (request.type === 'IMPROVE_PROMPT') {
+    (async () => {
+      try {
+        const gptService = GPTService.getInstance();
+        const improvedPrompt = await gptService.modifyPrompt({
+          prompt: request.prompt,
+          instruction: 'enhance this prompt with more specific details while maintaining the original style and vision'
+        });
+        
+        sendResponse({
+          success: true,
+          improvedPrompt: improvedPrompt
+        });
+      } catch (error) {
+        sendResponse({
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to improve prompt'
+        });
+      }
+    })();
+    return true;
+  }
+  
+  if (request.type === 'CHANGE_PROMPT') {
+    (async () => {
+      try {
+        const gptService = GPTService.getInstance();
+        const changedPrompt = await gptService.modifyPrompt({
+          prompt: request.prompt,
+          instruction: request.instructions
+        });
+        
+        sendResponse({
+          success: true,
+          changedPrompt: changedPrompt
+        });
+      } catch (error) {
+        sendResponse({
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to change prompt'
+        });
+      }
+    })();
     return true;
   }
   

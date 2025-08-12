@@ -51,48 +51,19 @@ export const Header: React.FC<HeaderProps> = ({ searchQuery = '', onSearch, onPr
   return (
     <>
       <header className="header">
-        {/* User Status Row */}
-        <div className="header-user-row">
-          <div className="user-status">
-            {userState.isSignedIn ? (
-              <div className="user-info">
-                <button 
-                  className={`user-tier-badge tier-${userState.tier} ${userState.tier === 'free' ? 'clickable' : ''}`}
-                  onClick={userState.tier === 'free' ? handleUpgradeClick : undefined}
-                  disabled={userState.tier === 'paid'}
-                  title={userState.tier === 'free' ? 'Click to upgrade to Pro' : 'Pro plan'}
-                >
-                  {userState.tier === 'paid' ? '⭐ Pro' : '🎁 Free'}
-                </button>
-                {userState.tier === 'free' && (
-                  <button 
-                    className={`modifications-count ${getRemainingModifications() === 0 ? 'limit-reached' : ''} clickable`}
-                    onClick={handleUpgradeClick}
-                    title="Click to upgrade for unlimited modifications"
-                  >
-                    {getRemainingModifications()}/3 left
-                  </button>
-                )}
-              </div>
-            ) : (
-              <GoogleAuth />
-            )}
-          </div>
-        </div>
-        
-        {/* Main Header Row */}
-        <div className="header-content">
+        {/* First row: Logo, title, search, user status, settings */}
+        <div className="header-main">
           <div className="header-left">
-            <img src="/icons/icon32.svg" alt="Veo 3 Logo" className="header-logo" />
-            <h1 className="header-title">Veo 3 Prompt Assistant</h1>
+            <img src="/icons/icon32.svg" alt="VeoPrompter Logo" className="header-logo" />
           </div>
-          <div className="header-actions">
+          
+          <div className="header-right">
             {onSearch && (
               <div className="search-container">
                 <input
                   type="text"
                   className="search-input"
-                  placeholder="Search prompts..."
+                  placeholder="Search..."
                   value={searchQuery}
                   onChange={(e) => onSearch(e.target.value)}
                   aria-label="Search prompts"
@@ -100,6 +71,33 @@ export const Header: React.FC<HeaderProps> = ({ searchQuery = '', onSearch, onPr
                 <span className="search-icon" aria-hidden="true">🔍</span>
               </div>
             )}
+            
+            <div className="user-status-compact">
+              {userState.isSignedIn ? (
+                <div className="user-info-compact">
+                  <button 
+                    className={`user-tier-badge-compact tier-${userState.tier} ${userState.tier === 'free' ? 'clickable' : ''}`}
+                    onClick={userState.tier === 'free' ? handleUpgradeClick : undefined}
+                    disabled={userState.tier === 'paid'}
+                    title={userState.tier === 'free' ? 'Click to upgrade to Pro' : 'Pro plan'}
+                  >
+                    {userState.tier === 'paid' ? '⭐' : '🎁'}
+                  </button>
+                  {userState.tier === 'free' && (
+                    <button 
+                      className={`modifications-count-compact ${getRemainingModifications() === 0 ? 'limit-reached' : ''} clickable`}
+                      onClick={handleUpgradeClick}
+                      title="Click to upgrade for unlimited modifications"
+                    >
+                      {getRemainingModifications()}/3
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <GoogleAuth />
+              )}
+            </div>
+            
             <button 
               className="icon-button"
               onClick={openSettings}
@@ -110,12 +108,12 @@ export const Header: React.FC<HeaderProps> = ({ searchQuery = '', onSearch, onPr
           </div>
         </div>
 
-        {/* Action Buttons - Show for users with appropriate access */}
+        {/* Second row: Action buttons */}
         {(canAccess('createPrompts') || canAccess('createSequences')) && (
-          <div className="action-buttons">
+          <div className="header-actions-compact">
             {canAccess('createPrompts') && (
               <button
-                className="action-button create-prompt-btn"
+                className="action-button-compact create-prompt-btn"
                 onClick={() => setShowCreatePrompt(true)}
                 title="Create new prompt with AI"
               >
@@ -124,7 +122,7 @@ export const Header: React.FC<HeaderProps> = ({ searchQuery = '', onSearch, onPr
             )}
             {canAccess('createSequences') && (
               <button
-                className="action-button sequences-btn"
+                className="action-button-compact sequences-btn"
                 onClick={() => setShowSequences(true)}
                 title="Manage sequences"
               >

@@ -35,8 +35,8 @@ node simple-build.js  # Basic build for WSL environments (creates dist/ folder)
 #### Extension Structure
 - **Manifest V3**: Chrome extension using service workers and content scripts
 - **React Popup**: Main UI in `src/popup/` using React 18 with TypeScript
-- **Content Script**: Injects functionality into Veo 3/Flow pages (`src/content/index.ts`)
-- **Background Service Worker**: Handles API calls and message passing (`src/background/index.ts`)
+- **Content Script**: Injects ✨ Improve and 🔄 Change buttons into Veo 3/Flow pages (`src/content/index.ts`)
+- **Background Service Worker**: Handles API calls, message passing, and GPT service integration (`src/background/index.ts`)
 
 #### Service Layer
 - **GPT Service** (`src/services/gptService.ts`): OpenAI GPT-4o integration with SSASAC framework for prompt modification
@@ -57,6 +57,14 @@ node simple-build.js  # Basic build for WSL environments (creates dist/ folder)
 - Categories: Ads, Storytelling, Tutorial, Vlogging, Street Interview, Tech Influencer, Mobile Game
 - AI Modification: GPT-4o powered prompt enhancement with professional video production standards
 - My Prompts: Personal library with cloud sync
+
+#### Direct Veo 3/Flow Integration
+- **✨ Improve Button**: Automatically enhances existing prompts with cinematic details
+- **🔄 Change Button**: Opens modal for user-directed prompt modifications
+- **Smart Detection**: Multiple textarea selectors for reliable button injection
+- **Professional Styling**: Gradient buttons with hover effects positioned at bottom-right of textarea
+- **Modal Interface**: Dark-themed change instruction modal with keyboard shortcuts (ESC to close)
+- **Real-time Feedback**: Toast notifications for success/error states during AI processing
 
 #### Security
 - **API Key Encryption**: AES-GCM 256-bit encryption for stored API keys

@@ -31,11 +31,17 @@ export class GPTService {
     if (this.knowledgeBase) return this.knowledgeBase;
     
     try {
-      const response = await fetch('/data/knowledge-base.json');
+      // In service worker context, use chrome.runtime.getURL for proper path resolution
+      const knowledgeBaseUrl = typeof chrome !== 'undefined' && chrome.runtime 
+        ? chrome.runtime.getURL('data/knowledge-base.json')
+        : '/data/knowledge-base.json';
+        
+      const response = await fetch(knowledgeBaseUrl);
       this.knowledgeBase = await response.json();
       return this.knowledgeBase;
     } catch (error) {
       console.error('Failed to load knowledge base:', error);
+      // Return null so the service can still work without knowledge base
       return null;
     }
   }
@@ -190,7 +196,7 @@ Remember:
       });
 
       // If production endpoint fails due to network (e.g., offline or not deployed), try local dev server
-      if (!response.ok && typeof window !== 'undefined') {
+      if (!response.ok) {
         try {
           response = await fetch(GPT_PROXY_ENDPOINT_DEV, {
             method: 'POST',
