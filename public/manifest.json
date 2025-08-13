@@ -15,7 +15,7 @@
     "https://www.googleapis.com/*",
     "https://accounts.google.com/*",
     "https://extensionpay.com/*",
-    "https://veo-prompt-assistant.netlify.app/*",
+    "https://veoprompter.netlify.app/*",
     "http://localhost:8888/*"
   ],
   "oauth2": {

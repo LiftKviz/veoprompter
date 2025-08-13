@@ -1,6 +1,6 @@
 // Netlify Function: GPT proxy
 // Calls OpenAI Chat Completions with server-side API key and returns simplified response
-// Updated to ensure environment variables are loaded
+// Updated to ensure environment variables are loaded - v2
 
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
