@@ -87,7 +87,7 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
         const gptService = GPTService.getInstance();
         const improvedPrompt = await gptService.modifyPrompt({
           prompt: request.prompt,
-          instruction: 'enhance this prompt with more specific details while maintaining the original style and vision'
+          instruction: 'Improve this prompt by enhancing its cinematic flow and narrative quality. Add vivid details that create atmosphere and smooth action transitions. Maintain the original concept while making it more evocative and story-driven for Veo 3.'
         });
         
         sendResponse({
@@ -110,7 +110,7 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
         const gptService = GPTService.getInstance();
         const changedPrompt = await gptService.modifyPrompt({
           prompt: request.prompt,
-          instruction: request.instructions
+          instruction: `CHANGE REQUEST: "${request.instructions}". Adapt the core concept to this new context. Don't copy inappropriate details - understand the essence and recreate it appropriately. Make the change realistic and logical for the new subject matter.`
         });
         
         sendResponse({

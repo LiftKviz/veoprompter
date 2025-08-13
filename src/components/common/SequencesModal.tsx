@@ -208,18 +208,13 @@ export const SequencesModal: React.FC<SequencesModalProps> = ({ onClose }) => {
     
     // Create a special instruction that preserves character consistency
     const nextSceneInstruction = `
-    Create the next scene in this sequence. 
-    
-    IMPORTANT: Maintain character consistency:
-    - Keep the same character descriptions, clothing, and appearance
-    - Keep the same visual style and cinematography
-    - Keep the same mood and tone
+    Continue this video sequence with the next scene. Create a flowing, narrative prompt that naturally follows the previous scene.
     
     Previous scene: ${previousPrompt.prompt}
     
-    Next scene should: ${instruction}
+    Next scene direction: ${instruction}
     
-    Generate a prompt that continues the story while maintaining all character and style elements from the previous scene.
+    ESSENTIAL: Maintain perfect continuity - same characters (exact descriptions, clothing, appearance), same visual style, same cinematography approach, same mood and atmosphere. Let the story flow naturally from the previous scene while incorporating the new direction. Create smooth transitions and keep the cinematic narrative alive.
     `;
     
     try {

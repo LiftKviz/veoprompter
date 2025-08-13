@@ -73,7 +73,7 @@ function injectButtons() {
   
   // Create Improve Prompt button
   const improveBtn = createButton('I', '#00ffff', () => {
-    handleImprovePrompt(textarea);
+    handleImprovePrompt(textarea, improveBtn);
   }, 'Improve Prompt');
   
   // Create Change Prompt button
@@ -96,7 +96,8 @@ function injectButtons() {
   const updateButtonPosition = () => {
     const rect = textarea.getBoundingClientRect();
     buttonGroup.style.left = `${rect.left - 45}px`;
-    buttonGroup.style.top = `${rect.top + 10}px`;
+    // Position buttons at bottom of textarea, moving up slightly from bottom edge
+    buttonGroup.style.top = `${rect.bottom - 80}px`;
   };
   
   buttonGroup.appendChild(improveBtn);
@@ -225,12 +226,22 @@ function removeButtons() {
 }
 
 // Handle improve prompt action
-function handleImprovePrompt(textarea: HTMLTextAreaElement) {
+function handleImprovePrompt(textarea: HTMLTextAreaElement, button: HTMLElement) {
   const currentPrompt = textarea.value.trim();
   if (!currentPrompt) {
     showNotification('Please enter a prompt first', 'error');
     return;
   }
+  
+  // Save original button state
+  const originalText = button.textContent;
+  const originalBackground = button.style.background;
+  
+  // Set loading state
+  button.textContent = '⏳';
+  button.style.background = '#666666';
+  button.style.pointerEvents = 'none';
+  button.style.opacity = '0.7';
   
   showNotification('Improving prompt...', 'info');
   
@@ -238,6 +249,12 @@ function handleImprovePrompt(textarea: HTMLTextAreaElement) {
     type: 'IMPROVE_PROMPT',
     prompt: currentPrompt
   }, (response) => {
+    // Reset button state
+    button.textContent = originalText;
+    button.style.background = originalBackground;
+    button.style.pointerEvents = 'auto';
+    button.style.opacity = '1';
+    
     if (response && response.success) {
       textarea.value = response.improvedPrompt;
       textarea.dispatchEvent(new Event('input', { bubbles: true }));
