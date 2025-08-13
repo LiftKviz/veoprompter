@@ -80,7 +80,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
         className="option-button premium"
         onClick={onUpgrade}
       >
-        Upgrade to Pro - $19/mo
+        Upgrade to Pro - $6.99/mo
       </button>
       <span className="option-note">Best value for creators</span>
     </div>

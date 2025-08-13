@@ -217,7 +217,15 @@ Remember:
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.error?.message;
+        const errorMessage = errorData.error?.message || errorData.message;
+        
+        console.error('GPT API Response Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorData,
+          url: response.url
+        });
+        
         if (response.status === 401) {
           throw new Error('🔐 Unauthorized: Backend API key invalid or missing.');
         } else if (response.status === 403) {
@@ -226,8 +234,12 @@ Remember:
           throw new Error('⏰ Rate limit exceeded. Please try again later.');
         } else if (response.status >= 500) {
           throw new Error('🔧 Server error: Please try again shortly.');
+        } else if (response.status === 400) {
+          throw new Error(`📝 Bad request: ${errorMessage || 'Invalid prompt or instruction format.'}`);
+        } else if (response.status === 404) {
+          throw new Error('🔧 Service unavailable: The AI modification service is not currently deployed. Please contact support.');
         }
-        throw new Error(`❌ Request error: ${errorMessage || 'Please try again.'}`);
+        throw new Error(`❌ Request failed (${response.status}): ${errorMessage || response.statusText || 'Please try again.'}`);
       }
 
       const data = await response.json();

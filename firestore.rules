@@ -38,10 +38,30 @@ service cloud.firestore {
         && validateSequenceData(request.resource.data);
     }
     
+    // Subscriptions - users can read/write their own, admins can read all
+    match /subscriptions/{userId} {
+      allow read: if request.auth != null 
+        && (request.auth.uid == userId || isAdmin(request.auth));
+      
+      allow write: if request.auth != null 
+        && request.auth.uid == userId
+        && validateSubscriptionData(request.resource.data);
+        
+      // Allow admin to read all subscriptions
+      allow read: if request.auth != null && isAdmin(request.auth);
+    }
+    
     // Public prompts (read-only for all users)
     match /public-prompts/{promptId} {
       allow read: if true; // Public read access
       allow write: if false; // No write access (admin only via server)
+    }
+    
+    // Prompts collection (admin-managed, public readable)
+    match /prompts/{promptId} {
+      allow read: if true; // Public read access for extension
+      allow create, update, delete: if request.auth != null; // Temporarily allow any authenticated user
+      // TODO: Restrict to admin only: && isAdmin(request.auth);
     }
     
     // Admin access (for managing public prompts)
@@ -54,6 +74,16 @@ service cloud.firestore {
     match /{document=**} {
       allow read, write: if false;
     }
+  }
+  
+  // Helper functions
+  function isAdmin(auth) {
+    return auth != null && (
+      auth.token.email in [
+        'nemanja@leaded.pro',
+        'nemanja.milic@gmail.com'
+      ] || auth.token.admin == true
+    );
   }
   
   // Validation functions
@@ -82,5 +112,14 @@ service cloud.firestore {
            data.createdAt is timestamp &&
            data.name.size() <= 100 &&
            data.prompts.size() <= 50;
+  }
+  
+  function validateSubscriptionData(data) {
+    return data.keys().hasAll(['userId', 'email', 'subscriptionStatus', 'plan', 'paid']) &&
+           data.userId is string &&
+           data.email is string &&
+           data.subscriptionStatus in ['active', 'past_due', 'canceled', 'unpaid', 'free'] &&
+           data.plan in ['free', 'pro'] &&
+           data.paid is bool;
   }
 }

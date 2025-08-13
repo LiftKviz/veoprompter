@@ -15,6 +15,8 @@ declare const firebaseService: {
   initialize: typeof initialize;
   subscribeToPrompts: typeof subscribeToPrompts;
   unsubscribeFromPrompts: typeof unsubscribeFromPrompts;
+  database: any;
+  getApps: () => any[];
 };
 
 export default firebaseService;

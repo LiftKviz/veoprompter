@@ -1,6 +1,6 @@
 // Firebase service for managing prompts
 import { initializeApp, getApps } from 'firebase/app';
-import { getFirestore, collection, orderBy, query, onSnapshot, getDocs, enablePersistentCaching } from 'firebase/firestore';
+import { getFirestore, collection, orderBy, query, onSnapshot, getDocs, connectFirestoreEmulator } from 'firebase/firestore';
 import { firebaseConfig } from '../firebase-config.js';
 
 class FirebaseService {
@@ -12,23 +12,41 @@ class FirebaseService {
     this.initialized = false;
   }
 
+  // Getter for the database instance
+  get database() {
+    return this.db;
+  }
+
+  // Getter for Firebase apps
+  getApps() {
+    return getApps();
+  }
+
   async initialize() {
     if (this.initialized) return;
 
     try {
+      console.log('🔧 Initializing Firebase...');
+      console.log('🔧 Firebase config:', firebaseConfig);
+      
       // Initialize Firebase
       const apps = getApps();
+      console.log('🔧 Existing Firebase apps:', apps.length);
+      
       const app = apps.length === 0 ? initializeApp(firebaseConfig) : apps[0];
+      console.log('🔧 Firebase app initialized:', app.name);
       
       this.db = getFirestore(app);
-      this.initialized = true;
       
-      // Enable offline persistence
+      // Configure offline persistence using newer API
       try {
-        await enablePersistentCaching(this.db);
+        // Note: In newer Firebase versions, persistence is enabled by default
+        console.log('🔧 Firebase persistence is enabled by default');
       } catch (err) {
-        console.warn('Firebase persistence failed:', err);
+        console.warn('Firebase persistence configuration warning:', err);
       }
+      
+      this.initialized = true;
       
       return true;
     } catch (error) {
@@ -39,41 +57,72 @@ class FirebaseService {
 
   // Subscribe to real-time prompt updates
   subscribeToPrompts(callback) {
+    console.log('📡 Subscribing to Firebase prompts...');
+    
     if (!this.db) {
-      console.error('Firebase not initialized');
-      return;
+      console.error('❌ Firebase DB not initialized');
+      callback([]); // Call with empty array so the promise resolves
+      return () => {}; // Return empty unsubscribe function
     }
 
     // Listen to prompts collection
     const promptsCollection = collection(this.db, 'prompts');
-    const promptsQuery = query(promptsCollection, orderBy('category'), orderBy('order', 'asc'));
+    console.log('📂 Listening to prompts collection...');
     
-    this.unsubscribe = onSnapshot(
-      promptsQuery,
-      (snapshot) => {
-        const prompts = [];
-        snapshot.forEach((doc) => {
-          prompts.push({
-            id: doc.id,
-            ...doc.data()
+    try {
+      // Simplified query - just order by category (no composite index needed)
+      const promptsQuery = query(promptsCollection, orderBy('category'));
+      
+      const unsubscribeFn = onSnapshot(
+        promptsQuery,
+        (snapshot) => {
+          const timestamp = new Date().toLocaleTimeString();
+          console.log(`📸 [${timestamp}] Firebase snapshot received: ${snapshot.size} documents, empty: ${snapshot.empty}`);
+          
+          const prompts = [];
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            // Only log first document to reduce noise
+            if (prompts.length === 0) {
+              console.log(`📄 First document ${doc.id}:`, data);
+            }
+            prompts.push({
+              id: doc.id,
+              ...data
+            });
           });
-        });
-        
-        this.prompts = prompts;
-        callback(prompts);
-        
-        // Cache prompts locally for offline access
-        chrome.storage.local.set({ 
-          cachedPrompts: prompts,
-          lastSync: Date.now()
-        });
-      },
-      (error) => {
-        console.error('Firebase subscription error:', error);
-        // Fall back to cached prompts
-        this.loadCachedPrompts(callback);
-      }
-    );
+          
+          this.prompts = prompts;
+          console.log(`🔥 [${timestamp}] Firebase real-time update: ${prompts.length} prompts received`);
+          console.log(`📢 [${timestamp}] Calling callback with ${prompts.length} prompts`);
+          callback(prompts);
+          
+          // Cache prompts locally for offline access
+          if (prompts.length > 0) {
+            chrome.storage.local.set({ 
+              cachedPrompts: prompts,
+              lastSync: Date.now()
+            });
+          }
+        },
+        (error) => {
+          console.error('❌ Firebase subscription error:', error);
+          console.error('Error details:', error.code, error.message);
+          // Fall back to cached prompts
+          this.loadCachedPrompts(callback);
+        }
+      );
+      
+      // Store unsubscribe function
+      this.unsubscribe = unsubscribeFn;
+      
+      // Return unsubscribe function for the caller
+      return unsubscribeFn;
+    } catch (error) {
+      console.error('❌ Failed to create Firebase query:', error);
+      callback([]);
+      return () => {};
+    }
   }
 
   // Load cached prompts for offline access
@@ -134,3 +183,4 @@ class FirebaseService {
 
 // Export singleton instance
 export const firebaseService = new FirebaseService();
+export default firebaseService;

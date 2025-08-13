@@ -16,30 +16,45 @@ export const PromptList: React.FC<PromptListProps> = ({ category, searchQuery = 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load prompts from data service
-    const loadPrompts = async () => {
-      setLoading(true);
-      try {
-        if (category === 'my-prompts') {
-          // Load saved prompts from storage
-          const result = await chrome.storage.local.get(['savedPrompts']);
-          setSavedPrompts(result.savedPrompts || []);
-        } else if (category === 'all') {
-          // For search results, load all prompts
-          const allPrompts = await promptDataService.getPrompts();
-          setPrompts(allPrompts);
-        } else {
-          // Load prompts by category
-          const categoryPrompts = await promptDataService.getPromptsByCategory(category);
-          setPrompts(categoryPrompts);
-        }
-      } catch (error) {
-        console.error('Failed to load prompts:', error);
+    setLoading(true);
+    
+    if (category === 'my-prompts') {
+      // Load saved prompts from storage
+      const loadSavedPrompts = async () => {
+        const result = await chrome.storage.local.get(['savedPrompts']);
+        setSavedPrompts(result.savedPrompts || []);
+        setLoading(false);
+      };
+      loadSavedPrompts();
+      return; // Don't subscribe to Firebase updates for saved prompts
+    }
+    
+    // Subscribe to real-time updates from Firebase for all other categories
+    const unsubscribe = promptDataService.subscribeToUpdates((updatedPrompts) => {
+      const timestamp = new Date().toLocaleTimeString();
+      console.log(`📡 [${timestamp}] Component received real-time update:`, updatedPrompts.length, 'prompts');
+      
+      if (category === 'all') {
+        console.log(`✅ [${timestamp}] Setting ALL prompts:`, updatedPrompts.length);
+        setPrompts(updatedPrompts);
+      } else {
+        const filteredPrompts = updatedPrompts.filter(p => p.category === category);
+        console.log(`✅ [${timestamp}] Setting filtered prompts for category '${category}':`, filteredPrompts.length);
+        setPrompts(filteredPrompts);
       }
       setLoading(false);
-    };
+    });
     
-    loadPrompts();
+    // Initialize data service if not already done
+    promptDataService.initialize().catch(error => {
+      console.error('Failed to initialize prompts:', error);
+      setLoading(false);
+    });
+    
+    // Cleanup subscription on unmount
+    return () => {
+      unsubscribe();
+    };
   }, [category]);
 
   // Filter prompts based on search query

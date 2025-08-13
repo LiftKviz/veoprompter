@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { paymentService } from '@/services/paymentService';
 import './Settings.css';
 
 interface SettingsProps {
@@ -7,11 +8,34 @@ interface SettingsProps {
 }
 
 export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
-  const { userState, getRemainingModifications, signOut } = useAuth();
+  const { userState, getRemainingModifications, signOut, signIn } = useAuth();
+  const [isSigningIn, setIsSigningIn] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
-  const handleUpgrade = () => {
-    // TODO: Implement upgrade flow
-    window.open('https://your-upgrade-url.com', '_blank');
+  const handleUpgrade = async () => {
+    // Check if user is signed in first
+    if (!userState.isSignedIn) {
+      alert('Please sign in first to upgrade to Pro.');
+      return;
+    }
+    
+    try {
+      await paymentService.openPaymentPage();
+    } catch (error) {
+      console.error('Failed to open payment page:', error);
+    }
+  };
+
+  const handleSignIn = async () => {
+    setIsSigningIn(true);
+    try {
+      await signIn();
+    } catch (error) {
+      console.error('Sign in failed:', error);
+      alert('Sign in failed. Please try again.');
+    } finally {
+      setIsSigningIn(false);
+    }
   };
 
   const handleSignOut = async () => {
@@ -71,8 +95,25 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
             
           </div>
 
-          {/* Upgrade Section */}
-          {userState.tier !== 'paid' && (
+          {/* Sign In / Upgrade Section */}
+          {!userState.isSignedIn ? (
+            <div className="setting-group sign-in-section">
+              <h3>Sign In Required</h3>
+              <p>Sign in to access premium features and upgrade to Pro.</p>
+              <div className="upgrade-features">
+                <div className="feature">✨ Save your favorite prompts</div>
+                <div className="feature">🎯 Track your usage</div>
+                <div className="feature">🚀 Unlock Pro features</div>
+              </div>
+              <button 
+                className="sign-in-button primary" 
+                onClick={handleSignIn}
+                disabled={isSigningIn}
+              >
+                {isSigningIn ? 'Signing In...' : '👤 Sign In with Google'}
+              </button>
+            </div>
+          ) : userState.tier !== 'paid' && (
             <div className="setting-group upgrade-section">
               <h3>Upgrade to Pro</h3>
               <div className="upgrade-features">
@@ -81,7 +122,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                 <div className="feature">🚀 Advanced features</div>
               </div>
               <button className="upgrade-button" onClick={handleUpgrade}>
-                Upgrade to Pro
+                Upgrade to Pro - $6.99/mo
               </button>
             </div>
           )}
@@ -93,12 +134,12 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
               Veo 3 Prompt Assistant helps you create better prompts for Google's Veo 3 video AI model.
             </p>
             <div className="links">
-              <a href="https://github.com/your-repo" target="_blank" rel="noopener noreferrer">
-                GitHub
-              </a>
-              <a href="https://your-support-url.com" target="_blank" rel="noopener noreferrer">
-                Support
-              </a>
+              <button 
+                className="link-button" 
+                onClick={() => setShowFeedbackModal(true)}
+              >
+                💬 Support & Feedback
+              </button>
             </div>
           </div>
         </div>
@@ -112,6 +153,47 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
           <button className="primary" onClick={onClose}>Close</button>
         </div>
       </div>
+      
+      {/* Feedback Modal */}
+      {showFeedbackModal && (
+        <div className="feedback-overlay">
+          <div className="feedback-modal">
+            <div className="feedback-header">
+              <h3>💬 Support & Feedback</h3>
+              <button 
+                className="close-button" 
+                onClick={() => setShowFeedbackModal(false)}
+                aria-label="Close feedback modal"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="feedback-content">
+              <p>We'd love to hear from you! Your feedback helps us improve Veo 3 Prompt Assistant.</p>
+              <div className="feedback-options">
+                <div className="feedback-option">
+                  <h4>📧 Email us directly</h4>
+                  <p>Got suggestions, bugs, or questions?</p>
+                  <a 
+                    href="mailto:nemanja@memekitchen.ai?subject=Veo 3 Prompt Assistant Feedback"
+                    className="email-link"
+                  >
+                    nemanja@memekitchen.ai
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div className="feedback-footer">
+              <button 
+                className="secondary" 
+                onClick={() => setShowFeedbackModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

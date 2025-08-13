@@ -34,19 +34,30 @@ class PaymentService {
 
   private async init() {
     try {
-      // Import ExtPay library
-      const { default: ExtPayLib } = await import('extpay');
-      this.extpay = ExtPayLib(this.EXTENSION_ID);
-      
-      // Start background service for ExtPay
+      // Only initialize ExtPay if we're not in a service worker context
       if (this.isBackgroundScript()) {
-        this.extpay.startBackground();
+        // In background script, ExtPay should be loaded differently
+        // Check if ExtPay is available globally
+        if (typeof ExtPay !== 'undefined') {
+          this.extpay = ExtPay(this.EXTENSION_ID);
+          this.extpay.startBackground();
+          this.initialized = true;
+          console.log('PaymentService initialized in background script');
+        } else {
+          console.warn('ExtPay not available in background script context');
+          this.initialized = false;
+          return;
+        }
+      } else {
+        // In popup/content script context, use dynamic import
+        const { default: ExtPayLib } = await import('extpay');
+        this.extpay = ExtPayLib(this.EXTENSION_ID);
+        this.initialized = true;
+        console.log('PaymentService initialized in popup context');
       }
-      
-      this.initialized = true;
-      console.log('PaymentService initialized successfully');
     } catch (error) {
       console.error('Failed to initialize PaymentService:', error);
+      this.initialized = false;
     }
   }
 
@@ -71,6 +82,35 @@ class PaymentService {
    * Get current user's payment status
    */
   async getUser(): Promise<PaymentUser> {
+    // If in popup context, get status from background script
+    if (!this.isBackgroundScript()) {
+      try {
+        return new Promise((resolve) => {
+          chrome.runtime.sendMessage(
+            { type: 'GET_PAYMENT_STATUS' },
+            (response) => {
+              if (chrome.runtime.lastError) {
+                console.error('Error getting payment status from background:', chrome.runtime.lastError);
+                resolve({
+                  paid: false,
+                  installedAt: new Date()
+                });
+              } else {
+                resolve(response);
+              }
+            }
+          );
+        });
+      } catch (error) {
+        console.error('Error communicating with background script:', error);
+        return {
+          paid: false,
+          installedAt: new Date()
+        };
+      }
+    }
+
+    // If in background script, use ExtPay directly
     await this.ensureInitialized();
     
     try {

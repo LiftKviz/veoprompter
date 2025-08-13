@@ -1,4 +1,3 @@
-import { initializeApp } from 'firebase/app';
 import { 
   getAuth, 
   signInWithPopup, 
@@ -7,18 +6,15 @@ import {
   onAuthStateChanged
 } from 'firebase/auth';
 import { 
-  getFirestore, 
   doc, 
   setDoc, 
   getDoc,
   serverTimestamp 
 } from 'firebase/firestore';
-import { firebaseConfig } from '../firebase-config.js';
+import firebaseService from './firebaseService.js';
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+let auth = null;
+let db = null;
 const googleProvider = new GoogleAuthProvider();
 
 // Auth service class
@@ -26,11 +22,44 @@ class AuthService {
   constructor() {
     this.currentUser = null;
     this.authStateListeners = [];
-    this.initAuthListener();
+    this.initialized = false;
+    this.initializeFirebase();
+  }
+
+  // Initialize Firebase and auth
+  async initializeFirebase() {
+    if (this.initialized) return;
+    
+    try {
+      await firebaseService.initialize();
+      
+      // Get Firebase app instance from firebaseService
+      const apps = firebaseService.getApps ? firebaseService.getApps() : [];
+      const app = apps.length > 0 ? apps[0] : null;
+      
+      if (!app) {
+        console.error('No Firebase app found after initialization');
+        return;
+      }
+      
+      auth = getAuth(app);
+      db = firebaseService.database;
+      this.initialized = true;
+      
+      // Now initialize auth listener
+      this.initAuthListener();
+    } catch (error) {
+      console.error('Failed to initialize Firebase in AuthService:', error);
+    }
   }
 
   // Initialize auth state listener
   initAuthListener() {
+    if (!auth) {
+      console.warn('Auth not initialized yet, skipping auth listener setup');
+      return;
+    }
+    
     onAuthStateChanged(auth, async (user) => {
       this.currentUser = user;
       
@@ -59,6 +88,9 @@ class AuthService {
   // Sign in with Google
   async signInWithGoogle() {
     try {
+      // Ensure Firebase is initialized
+      await this.initializeFirebase();
+      
       // For Chrome extensions, we need to use chrome.identity API
       // This is a fallback for web/popup usage
       if (typeof chrome !== 'undefined' && chrome.identity) {
@@ -97,6 +129,12 @@ class AuthService {
 
   // Update user data in Firestore
   async updateUserData(user) {
+    await this.initializeFirebase();
+    if (!db) {
+      console.warn('Database not initialized, skipping user data update');
+      return;
+    }
+    
     const userRef = doc(db, 'users', user.uid);
     
     try {
@@ -154,6 +192,12 @@ class AuthService {
   // Sign out
   async signOut() {
     try {
+      await this.initializeFirebase();
+      if (!auth) {
+        console.warn('Auth not initialized, skipping Firebase sign out');
+        return;
+      }
+      
       await signOut(auth);
       
       // Clear Chrome identity token if in extension

@@ -3,6 +3,8 @@
  * Manages user state, API keys, and feature access
  */
 
+import { subscriptionSyncService } from './subscriptionSyncService';
+
 export type UserTier = 'anonymous' | 'free' | 'paid';
 
 export interface UserState {
@@ -238,6 +240,13 @@ class AuthService {
 
           // Save to storage
           await chrome.storage.local.set({ userState: this.userState });
+          
+          // Setup subscription sync for the signed-in user
+          if (this.userState.userId) {
+            subscriptionSyncService.setupAutoSync(this.userState.userId).catch(error => {
+              console.error('Failed to setup subscription sync:', error);
+            });
+          }
           
           this.notifyListeners();
           resolve();

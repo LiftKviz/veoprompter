@@ -1,4 +1,3 @@
-import { paymentService } from '../services/paymentService';
 import { GPTService } from '../services/gptService';
 
 // Initialize ExtPay directly in background
@@ -36,15 +35,7 @@ chrome.runtime.onInstalled.addListener(() => {
     });
   }
 
-  // Initialize payment service in background
-  paymentService.onPaid((user) => {
-    console.log('User paid:', user);
-    // Broadcast payment status change to all extension pages
-    chrome.runtime.sendMessage({
-      type: 'PAYMENT_STATUS_CHANGED',
-      user: user
-    });
-  });
+  console.log('Extension installed and ExtPay background service started');
 });
 
 
@@ -53,6 +44,33 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
     chrome.storage.local.get(['userLibrary'], (result) => {
       sendResponse(result.userLibrary);
     });
+    return true;
+  }
+
+  if (request.type === 'GET_PAYMENT_STATUS') {
+    if (extpay) {
+      extpay.getUser().then((user: any) => {
+        sendResponse({
+          paid: user.paid || false,
+          paidAt: user.paidAt ? new Date(user.paidAt) : undefined,
+          installedAt: new Date(user.installedAt),
+          trialStartedAt: user.trialStartedAt ? new Date(user.trialStartedAt) : undefined,
+          email: user.email,
+          subscriptionStatus: user.subscriptionStatus
+        });
+      }).catch((error: any) => {
+        console.error('Error getting payment status:', error);
+        sendResponse({
+          paid: false,
+          installedAt: new Date()
+        });
+      });
+    } else {
+      sendResponse({
+        paid: false,
+        installedAt: new Date()
+      });
+    }
     return true;
   }
 

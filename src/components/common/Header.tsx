@@ -6,6 +6,7 @@ import { SequencesModal } from './SequencesModal';
 import { UpgradeModal } from './UpgradeModal';
 import { Prompt } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
+import { paymentService } from '@/services/paymentService';
 import './Header.css';
 
 interface HeaderProps {
@@ -157,9 +158,12 @@ export const Header: React.FC<HeaderProps> = ({ searchQuery = '', onSearch, onPr
           feature="Pro Features"
           message="Upgrade to Pro for unlimited modifications and advanced features"
           userState={userState}
-          onUpgrade={() => {
-            // TODO: Implement upgrade flow
-            window.open('https://your-upgrade-url.com', '_blank');
+          onUpgrade={async () => {
+            try {
+              await paymentService.openPaymentPage();
+            } catch (error) {
+              console.error('Failed to open payment page:', error);
+            }
             setShowUpgrade(false);
           }}
         />

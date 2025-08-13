@@ -108,7 +108,6 @@ auth.onAuthStateChanged((user) => {
 function subscribeToPrompts() {
   db.collection('prompts')
     .orderBy('category')
-    .orderBy('order', 'asc')
     .onSnapshot((snapshot) => {
       prompts = [];
       snapshot.forEach((doc) => {
@@ -126,6 +125,7 @@ function subscribeToPrompts() {
 
 async function loadPrompts() {
   try {
+    // Try to load from Firebase first
     const snapshot = await db.collection('prompts').get();
     prompts = [];
     snapshot.forEach((doc) => {
@@ -134,9 +134,32 @@ async function loadPrompts() {
         ...doc.data()
       });
     });
+    
+    // If Firebase is empty, fallback to local JSON data
+    if (prompts.length === 0) {
+      console.log('Firebase empty, loading from local prompts-data.json');
+      try {
+        const response = await fetch('./prompts-data.json');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.prompts && Array.isArray(data.prompts)) {
+            prompts = data.prompts.map((prompt, index) => ({
+              id: `local-${index}`,
+              ...prompt
+            }));
+            showMessage(`Loaded ${prompts.length} prompts from local data. Use "Import Existing Prompts" to save them to Firebase.`, 'success');
+          }
+        }
+      } catch (fallbackError) {
+        console.error('Failed to load fallback data:', fallbackError);
+        showMessage('No prompts found. Use "Import Existing Prompts" to populate the database.', 'error');
+      }
+    }
+    
     renderPrompts();
     updateStats();
   } catch (error) {
+    console.error('Error loading prompts:', error);
     showMessage('Error loading prompts: ' + error.message, 'error');
   }
 }
@@ -196,9 +219,13 @@ addPromptBtn.addEventListener('click', () => {
 });
 
 window.editPrompt = async (id) => {
+  console.log('Edit prompt called with ID:', id);
   editingPromptId = id;
   modalTitle.textContent = 'Edit Prompt';
   const prompt = prompts.find(p => p.id === id);
+  
+  console.log('Found prompt:', prompt);
+  console.log('Setting editingPromptId to:', editingPromptId);
   
   if (prompt) {
     document.getElementById('prompt-category').value = prompt.category;
@@ -209,6 +236,8 @@ window.editPrompt = async (id) => {
     document.getElementById('prompt-fields').value = prompt.customFields ? JSON.stringify(prompt.customFields, null, 2) : '';
     promptModal.classList.add('show');
     updatePreview(); // Update preview when editing
+  } else {
+    console.error('Prompt not found with ID:', id);
   }
 };
 
@@ -260,10 +289,16 @@ promptForm.addEventListener('submit', async (e) => {
   };
 
   try {
+    console.log('Saving prompt data:', promptData);
+    console.log('Current user:', currentUser?.email);
+    console.log('Editing ID:', editingPromptId);
+    
     if (editingPromptId) {
+      console.log('Updating document:', editingPromptId);
       await db.collection('prompts').doc(editingPromptId).update(promptData);
       showMessage('Prompt updated successfully', 'success');
     } else {
+      console.log('Creating new document');
       promptData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
       promptData.createdBy = currentUser.email;
       await db.collection('prompts').add(promptData);
@@ -271,7 +306,11 @@ promptForm.addEventListener('submit', async (e) => {
     }
     promptModal.classList.remove('show');
     promptForm.reset();
+    editingPromptId = null; // Reset editing ID
   } catch (error) {
+    console.error('Firebase save error:', error);
+    console.error('Error code:', error.code);
+    console.error('Error details:', error);
     showMessage('Error saving prompt: ' + error.message, 'error');
   }
 });

@@ -1,6 +1,7 @@
 [build]
   publish = "admin-dashboard"
-  command = "echo 'No build step needed - static files ready'"
+  functions = "netlify/functions"
+  command = "echo 'Functions will be deployed from netlify/functions'"
 
 [build.environment]
   NODE_VERSION = "18"

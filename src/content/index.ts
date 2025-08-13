@@ -169,7 +169,7 @@ function createButton(text: string, color: string, onClick: () => void, tooltip?
       document.body.appendChild(tooltipElement);
     };
     
-    const showTooltip = (e: MouseEvent) => {
+    const showTooltip = (_e: MouseEvent) => {
       if (!tooltipElement) createTooltip();
       if (tooltipElement) {
         const rect = button.getBoundingClientRect();

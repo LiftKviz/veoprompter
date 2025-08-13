@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { paymentService } from '@/services/paymentService';
 import './SubscriptionStatus.css';
 
 interface SubscriptionStatusProps {
@@ -17,12 +18,15 @@ const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({
   const remainingModifications = getRemainingModifications();
   const shouldShow = userState.tier === 'free' && remainingModifications === 0 && isVisible;
 
-  const handleUpgrade = () => {
+  const handleUpgrade = async () => {
     if (onUpgradeClick) {
       onUpgradeClick();
     } else {
-      // TODO: Implement upgrade flow
-      window.open('https://your-upgrade-url.com', '_blank');
+      try {
+        await paymentService.openPaymentPage();
+      } catch (error) {
+        console.error('Failed to open payment page:', error);
+      }
     }
   };
 

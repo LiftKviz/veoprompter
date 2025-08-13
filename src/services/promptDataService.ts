@@ -19,6 +19,7 @@ class PromptDataService {
   private prompts: Prompt[] = [];
   private loaded = false;
   private unsubscribe: (() => void) | null = null;
+  private updateCallbacks: Set<(prompts: Prompt[]) => void> = new Set();
 
   /**
    * Initialize and load prompts from best available source
@@ -26,12 +27,26 @@ class PromptDataService {
   async initialize(): Promise<Prompt[]> {
     console.log('🔄 Starting prompt data initialization...');
     
-    // Skip Firebase for now and go straight to admin dashboard
+    // Try Firebase first for real-time sync
     try {
-      console.log('📊 Trying admin dashboard first...');
+      console.log('🔥 Trying Firebase for real-time sync...');
+      const firebasePrompts = await this.loadFromFirebase();
+      if (firebasePrompts.length > 0) {
+        console.log(`✅ Loaded ${firebasePrompts.length} prompts from Firebase with real-time sync`);
+        this.prompts = firebasePrompts;
+        this.loaded = true;
+        return firebasePrompts;
+      }
+    } catch (error) {
+      console.warn('⚠️ Firebase failed, trying fallbacks:', error);
+    }
+    
+    // Fallback to admin dashboard static JSON
+    try {
+      console.log('📊 Trying admin dashboard static data...');
       const adminPrompts = await this.loadFromAdminDashboard();
       if (adminPrompts.length > 0) {
-        console.log(`✅ Loaded ${adminPrompts.length} prompts from admin dashboard`);
+        console.log(`✅ Loaded ${adminPrompts.length} prompts from admin dashboard (static)`);
         this.prompts = adminPrompts;
         this.loaded = true;
         return adminPrompts;
@@ -65,9 +80,32 @@ class PromptDataService {
       // Initialize Firebase if not already done
       await firebaseService.initialize();
       
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
+        let resolved = false;
+        
+        // Set a timeout to reject if no data comes
+        const timeout = setTimeout(() => {
+          if (!resolved) {
+            console.warn('⏱️ Firebase timeout - no data received within 5 seconds');
+            resolved = true;
+            reject(new Error('Firebase timeout'));
+          }
+        }, 5000);
+        
         // Subscribe to real-time updates
-        firebaseService.subscribeToPrompts((firebasePrompts: any[]) => {
+        this.unsubscribe = firebaseService.subscribeToPrompts((firebasePrompts: any[]) => {
+          if (!firebasePrompts) {
+            console.warn('📭 Firebase returned null/undefined prompts');
+            if (!resolved) {
+              clearTimeout(timeout);
+              resolved = true;
+              resolve([]);
+            }
+            return;
+          }
+          
+          console.log(`🔥 Firebase raw data:`, firebasePrompts);
+          
           this.prompts = firebasePrompts.map((p, index) => ({
             id: p.id || `firebase-${index + 1}`,
             category: p.category as CategoryType,
@@ -79,14 +117,57 @@ class PromptDataService {
           }));
           
           this.loaded = true;
-          console.log(`Loaded ${this.prompts.length} prompts from Firebase`);
-          resolve(this.prompts);
+          console.log(`🔄 Firebase update: ${this.prompts.length} prompts processed`);
+          
+          // Notify all subscribers of the update
+          this.notifySubscribers();
+          
+          // Resolve on first load
+          if (!resolved) {
+            clearTimeout(timeout);
+            resolved = true;
+            resolve(this.prompts);
+          }
         });
       });
     } catch (error) {
       console.warn('Failed to load from Firebase:', error);
       return [];
     }
+  }
+
+  /**
+   * Subscribe to prompt updates
+   */
+  subscribeToUpdates(callback: (prompts: Prompt[]) => void): () => void {
+    this.updateCallbacks.add(callback);
+    
+    // If we already have prompts loaded, call the callback immediately
+    if (this.loaded && this.prompts.length > 0) {
+      callback(this.prompts);
+    }
+    
+    // Ensure Firebase is initialized and listening
+    if (!this.unsubscribe && !this.loaded) {
+      console.log('🔄 Late subscriber detected, initializing Firebase...');
+      this.initialize().catch(err => {
+        console.error('Failed to initialize for late subscriber:', err);
+      });
+    }
+    
+    // Return unsubscribe function
+    return () => {
+      this.updateCallbacks.delete(callback);
+    };
+  }
+
+  /**
+   * Notify all subscribers of prompt updates
+   */
+  private notifySubscribers() {
+    this.updateCallbacks.forEach(callback => {
+      callback(this.prompts);
+    });
   }
 
   /**

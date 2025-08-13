@@ -53,6 +53,11 @@
       ],
       "js": ["content.js"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://extensionpay.com/*"],
+      "js": ["vendor.js"],
+      "run_at": "document_start"
     }
   ],
   "content_security_policy": {
