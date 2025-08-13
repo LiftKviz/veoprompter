@@ -1,7 +1,7 @@
 import { GPTModifyRequest } from '@/types';
 
 // Backend proxy endpoints (server-side holds the OpenAI API key)
-const GPT_PROXY_ENDPOINT_PROD = 'https://veo-prompt-assistant.netlify.app/.netlify/functions/gpt';
+const GPT_PROXY_ENDPOINT_PROD = 'https://veoprompter.netlify.app/.netlify/functions/gpt';
 const GPT_PROXY_ENDPOINT_DEV = 'http://localhost:8888/.netlify/functions/gpt';
 
 // Declare SecureStorage for encrypted API key storage
