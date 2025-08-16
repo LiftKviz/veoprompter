@@ -1,7 +1,7 @@
 {
-  "name": "veo-3-prompt-assistant",
-  "version": "1.0.1",
-  "description": "Chrome extension for discovering and managing Veo 3 prompt templates",
+  "name": "vprompter",
+  "version": "1.0.2",
+  "description": "Professional prompt templates for AI video generation",
   "private": true,
   "scripts": {
     "build": "webpack --mode production",

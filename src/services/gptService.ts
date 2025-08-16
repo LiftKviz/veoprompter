@@ -1,8 +1,7 @@
 import { GPTModifyRequest } from '@/types';
 
-// Backend proxy endpoints (server-side holds the OpenAI API key)
+// Backend proxy endpoint (server-side holds the OpenAI API key)
 const GPT_PROXY_ENDPOINT_PROD = 'https://veoprompter.netlify.app/.netlify/functions/gpt';
-const GPT_PROXY_ENDPOINT_DEV = 'http://localhost:8888/.netlify/functions/gpt';
 
 // Declare SecureStorage for encrypted API key storage
 declare const SecureStorage: any;
@@ -145,26 +144,6 @@ Write cinematic, flowing prompts that adapt to different contexts (ads, intervie
           maxTokens: 800
         })
       });
-
-      // If production endpoint fails due to network (e.g., offline or not deployed), try local dev server
-      if (!response.ok) {
-        try {
-          response = await fetch(GPT_PROXY_ENDPOINT_DEV, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              model: 'gpt-4o',
-              systemPrompt,
-              prompt: request.prompt,
-              instruction: request.instruction,
-              temperature: 0.7,
-              maxTokens: 800
-            })
-          });
-        } catch (_devErr) {
-          // swallow to fall through to unified error handling below
-        }
-      }
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
