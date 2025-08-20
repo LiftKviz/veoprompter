@@ -1,4 +1,5 @@
-console.log('Veo 3 Prompt Assistant content script loaded');
+console.log('[VeoPrompter] Content script loaded on:', window.location.href);
+console.log('[VeoPrompter] Initializing...');
 
 // Store references to avoid duplicate buttons
 let injectedButtons: HTMLElement[] = [];
@@ -10,42 +11,65 @@ function findTextArea(): HTMLTextAreaElement | null {
     'textarea[placeholder*="prompt"]',
     'textarea[placeholder*="Prompt"]',
     'textarea[placeholder*="Describe"]',
+    'textarea[placeholder*="describe"]',
+    'textarea[placeholder*="video"]',
+    'textarea[placeholder*="Video"]',
     'textarea[id*="prompt"]',
     'textarea[id*="PINHOLE_TEXT_AREA_ELEMENT_ID"]',
     'textarea[class*="prompt"]',
-    'textarea[data-testid*="prompt"]'
+    'textarea[data-testid*="prompt"]',
+    'textarea[aria-label*="prompt"]',
+    'textarea[aria-label*="Prompt"]',
+    'textarea[name*="prompt"]'
   ];
   
   for (const selector of selectors) {
     const textarea = document.querySelector(selector) as HTMLTextAreaElement;
     if (textarea) {
-      console.log(`Found textarea with selector: ${selector}`);
+      console.log(`[VeoPrompter] Found textarea with selector: ${selector}`);
       return textarea;
     }
   }
   
-  // Fallback: look for any textarea that might be the prompt input
+  // Fallback: look for any visible textarea
   const textareas = document.querySelectorAll('textarea');
+  console.log(`[VeoPrompter] Found ${textareas.length} textareas on page`);
+  
   for (const textarea of textareas) {
     const element = textarea as HTMLTextAreaElement;
-    if (element.placeholder && element.placeholder.toLowerCase().includes('prompt') ||
-        element.id && element.id.toLowerCase().includes('prompt') ||
-        element.className && element.className.toLowerCase().includes('prompt')) {
-      console.log('Found textarea via fallback search');
+    const rect = element.getBoundingClientRect();
+    const isVisible = rect.width > 0 && rect.height > 0;
+    
+    console.log(`[VeoPrompter] Checking textarea:`, {
+      placeholder: element.placeholder,
+      id: element.id,
+      className: element.className,
+      isVisible,
+      width: rect.width,
+      height: rect.height
+    });
+    
+    // Check if it's a main textarea (visible and reasonable size)
+    if (isVisible && rect.height > 50) {
+      console.log('[VeoPrompter] Using visible textarea as prompt input');
       return element;
     }
   }
   
+  console.log('[VeoPrompter] No suitable textarea found');
   return null;
 }
 
 // Create and inject buttons next to textarea
 function injectButtons() {
+  console.log('[VeoPrompter] Attempting to inject buttons...');
   const textarea = findTextArea();
   if (!textarea) {
-    console.log('No textarea found for button injection');
+    console.log('[VeoPrompter] No textarea found for button injection');
     return;
   }
+  
+  console.log('[VeoPrompter] Textarea found, preparing button injection');
   
   // Remove existing buttons to avoid duplicates
   removeButtons();
@@ -74,12 +98,12 @@ function injectButtons() {
   // Create Improve Prompt button
   const improveBtn = createButton('I', '#00ffff', () => {
     handleImprovePrompt(textarea, improveBtn);
-  }, 'Improve Prompt');
+  }, 'Improve Prompt - Enhance cinematic quality, add vivid details and smooth transitions');
   
   // Create Change Prompt button
   const changeBtn = createButton('C', '#ff00ff', () => {
     handleChangePrompt(textarea);
-  }, 'Change Prompt');
+  }, 'Change Prompt - Adapt to different context (e.g., make it funny, change location)');
   
   // Position buttons on left side, outside the textarea
   const buttonGroup = document.createElement('div');
@@ -118,10 +142,14 @@ function injectButtons() {
   (buttonGroup as any)._updateHandler = updateHandler;
   
   injectedButtons.push(buttonGroup);
-  console.log('Buttons injected successfully');
-  console.log('Button container:', buttonContainer);
-  console.log('Textarea:', textarea);
-  console.log('Button group position:', buttonGroup.getBoundingClientRect());
+  console.log('[VeoPrompter] Buttons injected successfully');
+  console.log('[VeoPrompter] Button container:', buttonContainer);
+  console.log('[VeoPrompter] Textarea:', textarea);
+  console.log('[VeoPrompter] Button group position:', buttonGroup.getBoundingClientRect());
+  console.log('[VeoPrompter] Buttons visible:', {
+    improveBtn: improveBtn.getBoundingClientRect(),
+    changeBtn: changeBtn.getBoundingClientRect()
+  });
 }
 
 // Create styled button
@@ -156,12 +184,15 @@ function createButton(text: string, color: string, onClick: () => void, tooltip?
       tooltipElement.textContent = tooltip;
       tooltipElement.style.cssText = `
         position: fixed;
-        background: #333;
+        background: rgba(33, 33, 33, 0.95);
         color: white;
-        padding: 6px 10px;
-        border-radius: 4px;
-        font-size: 12px;
-        white-space: nowrap;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        max-width: 250px;
+        white-space: normal;
+        line-height: 1.4;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         z-index: 10001;
         pointer-events: none;
         opacity: 0;
@@ -174,7 +205,9 @@ function createButton(text: string, color: string, onClick: () => void, tooltip?
       if (!tooltipElement) createTooltip();
       if (tooltipElement) {
         const rect = button.getBoundingClientRect();
-        tooltipElement.style.left = `${rect.right + 8}px`;
+        // Position tooltip to the left of the button
+        tooltipElement.style.right = `${window.innerWidth - rect.left + 8}px`;
+        tooltipElement.style.left = 'auto';
         tooltipElement.style.top = `${rect.top + rect.height / 2 - tooltipElement.offsetHeight / 2}px`;
         tooltipElement.style.opacity = '1';
       }

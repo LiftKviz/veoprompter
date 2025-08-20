@@ -1,6 +1,6 @@
 {
   "name": "vprompter",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "Professional prompt templates for AI video generation",
   "private": true,
   "scripts": {

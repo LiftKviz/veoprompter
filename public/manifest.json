@@ -1,27 +1,23 @@
 {
   "manifest_version": 3,
   "name": "vPrompter",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "Professional prompt templates for AI video generation",
   "permissions": [
     "storage",
     "clipboardWrite",
-    "identity",
+    "tabs",
     "sidePanel"
   ],
   "host_permissions": [
     "https://veo.google.com/*",
-    "https://flow.google.com/*",
+    "https://labs.google/*",
+    "https://www.googleapis.com/oauth2/v2/userinfo",
+    "https://oauth2.googleapis.com/token",
+    "https://accounts.google.com/*",
     "https://veoprompter.netlify.app/*",
     "https://extensionpay.com/*"
   ],
-  "oauth2": {
-    "client_id": "374428444834-8n6q86s3scnmlpc4t2dsj1mvee76fi1t.apps.googleusercontent.com",
-    "scopes": [
-      "https://www.googleapis.com/auth/userinfo.email",
-      "https://www.googleapis.com/auth/userinfo.profile"
-    ]
-  },
   "action": {
     "default_icon": {
       "16": "icons/icon16.png",
@@ -46,7 +42,7 @@
     {
       "matches": [
         "https://veo.google.com/*",
-        "https://flow.google.com/*"
+        "https://labs.google/fx/tools/flow/*"
       ],
       "js": ["content.js"],
       "run_at": "document_idle"
@@ -58,6 +54,6 @@
     }
   ],
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'self'; connect-src 'self' https://veoprompter.netlify.app https://extensionpay.com;"
+    "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'self'; connect-src 'self' https://www.googleapis.com/oauth2/v2/userinfo https://oauth2.googleapis.com/token https://accounts.google.com https://veoprompter.netlify.app https://extensionpay.com https://firestore.googleapis.com https://firebaseapp.com https://firebaseio.com;"
   }
 }

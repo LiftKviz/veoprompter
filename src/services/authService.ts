@@ -55,6 +55,15 @@ class AuthService {
         }
       }
     });
+    
+    // Listen for usage updates from background script
+    chrome.runtime.onMessage.addListener((message, _sender, _sendResponse) => {
+      if (message.type === 'USAGE_UPDATED') {
+        this.userState.dailyModificationsUsed = message.dailyUsage.count;
+        this.userState.lastResetDate = message.dailyUsage.date;
+        this.notifyListeners();
+      }
+    });
   }
 
   /**
@@ -123,7 +132,6 @@ class AuthService {
    */
   getFeatureAccess(): FeatureAccess {
     const tier = this.userState.tier;
-    const hasRemainingMods = this.userState.dailyModificationsUsed < this.DAILY_FREE_MODIFICATIONS;
 
     switch (tier) {
       case 'anonymous':
@@ -142,8 +150,8 @@ class AuthService {
           viewPrompts: true,
           copyPrompts: true,
           savePrompts: true,
-          modifyPrompts: hasRemainingMods, // Can modify if under daily limit
-          createPrompts: hasRemainingMods,  // Can create if under daily limit
+          modifyPrompts: true, // Always allow access, check limits when used
+          createPrompts: true,  // Always allow access, check limits when used
           createSequences: true, // Sequences don't use AI
           unlimitedUsage: false
         };
@@ -207,39 +215,38 @@ class AuthService {
    */
   async signInWithGoogle(): Promise<void> {
     return new Promise((resolve, reject) => {
-      chrome.identity.getAuthToken({ interactive: true }, async (token) => {
-        if (chrome.runtime.lastError || !token) {
-          reject(new Error(chrome.runtime.lastError?.message || 'Sign in failed'));
+      // Send message to background script to handle OAuth
+      chrome.runtime.sendMessage({ type: 'GOOGLE_SIGN_IN' }, async (response) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message || 'Sign in failed'));
+          return;
+        }
+        
+        if (!response || !response.success) {
+          reject(new Error(response?.error || 'Sign in failed'));
           return;
         }
 
         try {
-          // Get user info from Google
-          const response = await fetch('https://www.googleapis.com/oauth2/v1/userinfo', {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          });
-
-          if (!response.ok) {
-            throw new Error('Failed to get user info');
-          }
-
-          const userInfo = await response.json();
-
-          // Update user state
+          // Update user state with the returned user info
           this.userState = {
             isSignedIn: true,
             tier: 'free',
-            email: userInfo.email,
-            userId: userInfo.id,
+            email: response.user.email,
+            userId: response.user.email, // Use email as ID for simplicity
             hasApiKey: this.userState.hasApiKey,
             dailyModificationsUsed: 0,
             lastResetDate: new Date().toISOString().split('T')[0]
           };
 
           // Save to storage
-          await chrome.storage.local.set({ userState: this.userState });
+          await chrome.storage.local.set({ 
+            user: response.user,
+            dailyUsage: {
+              date: this.userState.lastResetDate,
+              count: 0
+            }
+          });
           
           // Setup subscription sync for the signed-in user
           if (this.userState.userId) {
@@ -261,24 +268,25 @@ class AuthService {
    * Sign out
    */
   async signOut(): Promise<void> {
-    // Clear cached auth token
-    chrome.identity.clearAllCachedAuthTokens(() => {
-      console.log('Signed out successfully');
+    return new Promise((resolve) => {
+      // Send message to background script to handle sign out
+      chrome.runtime.sendMessage({ type: 'GOOGLE_SIGN_OUT' }, () => {
+        // Reset user state
+        this.userState = {
+          isSignedIn: false,
+          tier: 'anonymous',
+          hasApiKey: false,
+          dailyModificationsUsed: 0,
+          lastResetDate: new Date().toISOString().split('T')[0]
+        };
+
+        // Clear from storage
+        chrome.storage.local.remove(['user', 'dailyUsage'], () => {
+          this.notifyListeners();
+          resolve();
+        });
+      });
     });
-
-    // Reset user state
-    this.userState = {
-      isSignedIn: false,
-      tier: 'anonymous',
-      hasApiKey: false,
-      dailyModificationsUsed: 0,
-      lastResetDate: new Date().toDateString()
-    };
-
-    // Clear from storage
-    await chrome.storage.local.remove(['userState']);
-    
-    this.notifyListeners();
   }
 
   /**

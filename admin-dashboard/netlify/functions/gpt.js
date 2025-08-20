@@ -25,10 +25,13 @@ exports.handler = async (event) => {
   }
 
   // Handle OAuth exchange requests
-  if (event.queryStringParameters?.oauth === 'exchange') {
+  const body = JSON.parse(event.body || '{}');
+  
+  // Check for OAuth exchange in query params OR in body
+  if (event.queryStringParameters?.oauth === 'exchange' || body.oauth === 'exchange') {
     console.log('OAuth exchange detected');
     try {
-      const { code, redirectUri } = JSON.parse(event.body);
+      const { code, redirectUri } = body;
 
       if (!code) {
         return {

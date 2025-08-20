@@ -1,4 +1,73 @@
-# Veo 3 Prompt Assistant - Changelog
+# vPrompter - Changelog
+
+## Version 1.0.4 - Google OAuth Fix for Chrome Web Store (2025-08-19)
+
+### 🔧 Critical Fix for Chrome Web Store Rejection
+- **FIXED**: Google Login functionality that was non-functional in v1.0.3
+- **ADDED**: Proper OAuth handlers in background script for Manifest V3 compliance
+- **IMPLEMENTED**: Message-based authentication flow between popup and background script
+- **RESOLVED**: Chrome Web Store violation "Red Potassium" for non-functional Google Login
+
+### 🔐 Authentication Implementation
+- **ADDED**: `GOOGLE_SIGN_IN` and `GOOGLE_SIGN_OUT` message handlers in background script
+- **UPDATED**: AuthService to use background script for OAuth operations via chrome.runtime.sendMessage
+- **FIXED**: Proper user state persistence in Chrome storage after authentication
+- **ENSURED**: Authentication tokens properly managed through chrome.identity API
+
+### 📋 Technical Details
+- **Background Script**: Now handles OAuth flow with chrome.identity.getAuthToken()
+- **User Info Fetch**: Properly retrieves user data from googleapis.com/oauth2/v2/userinfo
+- **State Management**: User authentication state correctly synced across extension components
+- **Error Handling**: Comprehensive error messages for authentication failures
+
+## Version 1.0.3 - Chrome Web Store Preparation Complete (2025-08-18)
+
+### 🛡️ Security Hardening for Chrome Web Store
+- **NARROWED**: Host permissions from broad (*://*/*) to specific domains only
+- **REMOVED**: localhost fallbacks from production code for security
+- **UPDATED**: Content Security Policy with proper connect-src directives
+- **FIXED**: Icon references to use PNG files instead of SVG for Chrome Web Store compliance
+- **SECURED**: Extension now uses minimal required permissions following principle of least privilege
+
+### 🔧 Bug Fixes & Authentication
+- **FIXED**: Google Flow URL pattern for floating button integration (labs.google/fx/tools/flow/*)
+- **FIXED**: Authentication bypass issue - floating buttons now require proper sign-in
+- **FIXED**: Usage counter not updating when using floating buttons
+- **ADDED**: Real-time usage broadcasting from background script to popup
+- **ENHANCED**: Authentication checks across all extension entry points
+
+### 🎨 UI/UX Improvements  
+- **IMPROVED**: Floating button tooltips now appear on the left with better descriptions
+- **ENHANCED**: Error messages with clear guidance for authentication requirements
+- **ADDED**: Visual feedback for authentication status across all features
+
+### 📋 Privacy & Compliance
+- **DEPLOYED**: Comprehensive privacy policy at https://veoprompter.netlify.app/privacy.html
+- **UPDATED**: Extension name from "Veo 3 Prompt Assistant" to "vPrompter" for uniqueness
+- **DOCUMENTED**: Complete data collection and usage policies
+
+### 🔄 Technical Infrastructure
+- **UPDATED**: Manifest version to 1.0.3 with final Chrome Web Store configurations
+- **FINALIZED**: Host permissions: veo.google.com, labs.google, googleapis.com/oauth2/v2/userinfo, veoprompter.netlify.app, extensionpay.com
+- **IMPLEMENTED**: Usage state synchronization between background script and popup
+- **ENHANCED**: Background script message handling for floating button operations
+
+### 📦 Production Ready
+- **COMPLETE**: All Chrome Web Store submission requirements met
+- **TESTED**: Authentication flow, usage limits, and real-time counter updates
+- **VERIFIED**: Floating buttons work correctly on Google Flow with proper authentication
+- **VALIDATED**: Extension security and compliance with Chrome Web Store policies
+
+## Version 1.0.2 - Extension Name Change & Initial Security (2025-08-17)
+
+### 🏷️ Branding Update
+- **CHANGED**: Extension name from "Veo 3 Prompt Assistant" to "vPrompter"
+- **UPDATED**: All references in manifest.json and documentation
+
+### 🔧 Initial Security Improvements
+- **ADDED**: Host permission restrictions
+- **UPDATED**: CSP configuration
+- **PREPARED**: Foundation for Chrome Web Store submission
 
 ## Version 1.0.1 - Security Hotfix (2025-08-10)
 

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Prompt } from '@/types';
 import { CreatePromptModal } from './CreatePromptModal';
-import { GPTService } from '@/services/gptService';
 import './SequencesModal.css';
 
 interface Sequence {
@@ -204,8 +203,6 @@ export const SequencesModal: React.FC<SequencesModalProps> = ({ onClose }) => {
   const handleNextScene = async (previousPrompt: Prompt, instruction: string) => {
     if (!selectedSequence) return;
     
-    const gptService = GPTService.getInstance();
-    
     // Create a special instruction that preserves character consistency
     const nextSceneInstruction = `
     Continue this video sequence with the next scene. Create a flowing, narrative prompt that naturally follows the previous scene.
@@ -218,10 +215,20 @@ export const SequencesModal: React.FC<SequencesModalProps> = ({ onClose }) => {
     `;
     
     try {
-      const nextScenePrompt = await gptService.modifyPrompt({
-        prompt: previousPrompt.prompt,
-        instruction: nextSceneInstruction
+      // Send to background script for consistent usage tracking
+      const response = await new Promise<{success: boolean, changedPrompt?: string, error?: string}>((resolve) => {
+        chrome.runtime.sendMessage({
+          type: 'CHANGE_PROMPT',
+          prompt: previousPrompt.prompt,
+          instructions: nextSceneInstruction
+        }, resolve);
       });
+      
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to generate next scene');
+      }
+      
+      const nextScenePrompt = response.changedPrompt!;
       
       // Create a new prompt object for the next scene
       const newPrompt: Prompt = {

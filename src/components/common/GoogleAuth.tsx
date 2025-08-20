@@ -32,39 +32,28 @@ export const GoogleAuth: React.FC = () => {
   const handleSignIn = async () => {
     setLoading(true);
     try {
-      // Use Chrome Identity API for OAuth
-      chrome.identity.getAuthToken({ interactive: true }, async (token) => {
-        if (chrome.runtime.lastError || !token) {
-          console.error('Sign in failed:', chrome.runtime.lastError);
-          setLoading(false);
+      // Use the new independent OAuth flow via background script
+      chrome.runtime.sendMessage({ type: 'GOOGLE_SIGN_IN' }, (response) => {
+        setLoading(false);
+        
+        if (chrome.runtime.lastError) {
+          console.error('Sign in error:', chrome.runtime.lastError);
+          return;
+        }
+        
+        if (!response || !response.success) {
+          console.error('Sign in failed:', response?.error || 'Unknown error');
           return;
         }
 
-        // Get user info from Google API
-        try {
-          const response = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
+        // Sign in successful
+        const userData: User = {
+          email: response.user.email,
+          name: response.user.name,
+          picture: response.user.picture
+        };
 
-          if (response.ok) {
-            const userInfo = await response.json();
-            const userData: User = {
-              email: userInfo.email,
-              name: userInfo.name,
-              picture: userInfo.picture
-            };
-
-            // Save user to storage
-            await chrome.storage.local.set({ user: userData });
-            setUser(userData);
-          }
-        } catch (error) {
-          console.error('Failed to get user info:', error);
-        }
-        
-        setLoading(false);
+        setUser(userData);
       });
     } catch (error) {
       console.error('Sign in error:', error);
@@ -74,9 +63,11 @@ export const GoogleAuth: React.FC = () => {
 
   const handleSignOut = async () => {
     try {
-      // Clear the auth token
-      chrome.identity.clearAllCachedAuthTokens(() => {
-        console.log('Signed out successfully');
+      // Use the new sign out flow via background script
+      chrome.runtime.sendMessage({ type: 'GOOGLE_SIGN_OUT' }, (response) => {
+        if (response?.success) {
+          console.log('Signed out successfully');
+        }
       });
 
       // Clear user from storage

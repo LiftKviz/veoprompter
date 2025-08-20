@@ -175,7 +175,8 @@ class PromptDataService {
    */
   async loadFromAdminDashboard(): Promise<Prompt[]> {
     // Try to load the admin dashboard prompts JSON data
-    const response = await fetch('/admin-dashboard/prompts-data.json');
+    const url = chrome.runtime.getURL('admin-dashboard/prompts-data.json');
+    const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
@@ -208,7 +209,8 @@ class PromptDataService {
    * Load prompts from prompts.txt file
    */
   async loadFromPromptsFile(): Promise<Prompt[]> {
-    const response = await fetch('/data/prompts.txt');
+    const url = chrome.runtime.getURL('data/prompts.txt');
+    const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }

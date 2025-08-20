@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { GPTService } from '@/services/gptService';
 import { Prompt, CategoryType } from '@/types';
 import './CreatePromptModal.css';
 
@@ -25,8 +24,6 @@ export const CreatePromptModal: React.FC<CreatePromptModalProps> = ({ onClose, o
     setError(null);
 
     try {
-      const gptService = GPTService.getInstance();
-      
       // Create system prompt for video generation
       const systemPrompt = `You are an expert AI prompt engineer specializing in Google Veo 3. Transform ideas into prompts using the SSASAC framework:
 
@@ -50,10 +47,20 @@ Follow the JSON structure and include:
 
 Create a detailed, cinematic prompt optimized for Veo 3.`;
 
-      const generatedPrompt = await gptService.modifyPrompt({
-        prompt: systemPrompt,
-        instruction: instruction
+      // Send to background script for consistent usage tracking
+      const response = await new Promise<{success: boolean, changedPrompt?: string, error?: string}>((resolve) => {
+        chrome.runtime.sendMessage({
+          type: 'CHANGE_PROMPT',
+          prompt: systemPrompt,
+          instructions: instruction
+        }, resolve);
       });
+      
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to generate prompt');
+      }
+      
+      const generatedPrompt = response.changedPrompt!;
 
       // Show the generated prompt to the user first
       setResult(generatedPrompt);

@@ -26,7 +26,7 @@ export class GPTService {
     return GPTService.instance;
   }
 
-  private async loadKnowledgeBase(): Promise<any> {
+  async loadKnowledgeBase(): Promise<any> {
     if (this.knowledgeBase) return this.knowledgeBase;
     
     try {
@@ -45,7 +45,7 @@ export class GPTService {
     }
   }
 
-  private generateSystemPrompt(_knowledgeBase?: any): string {
+  generateSystemPrompt(_knowledgeBase?: any): string {
     return `You MUST respond ONLY with valid JSON. No other text.
 
 {
@@ -120,6 +120,7 @@ Write cinematic, flowing prompts that adapt to different contexts (ads, intervie
 
   async modifyPrompt(request: GPTModifyRequest): Promise<string> {
     // No user API key required. Requests are routed through a secure backend proxy.
+    // Note: Usage checking is handled by individual callers (background script for floating buttons, popup for direct calls)
 
     if (!request.instruction?.trim()) {
       throw new Error('📝 Modification instruction required: Please describe how you want to modify the prompt.');
@@ -179,16 +180,20 @@ Write cinematic, flowing prompts that adapt to different contexts (ads, intervie
       }
       
       // Try to parse as JSON to extract the prompt
+      let result: string;
       try {
         const parsed = JSON.parse(data.content);
         if (parsed.prompt) {
-          return String(parsed.prompt).trim();
+          result = String(parsed.prompt).trim();
+        } else {
+          result = String(data.content).trim();
         }
       } catch (e) {
         // If not JSON or no prompt field, return as-is
+        result = String(data.content).trim();
       }
       
-      return String(data.content).trim();
+      return result;
     } catch (error) {
       console.error('GPT API error:', error);
       
