@@ -32,7 +32,15 @@ exports.handler = async (event) => {
   }
   
   // Handle OAuth exchange requests FIRST
+  console.log('Debug OAuth check:', {
+    queryOauth: event.queryStringParameters?.oauth,
+    bodyOauth: body.oauth,
+    bodyKeys: Object.keys(body),
+    method: event.httpMethod
+  });
+  
   if (event.queryStringParameters?.oauth === 'exchange' || body.oauth === 'exchange') {
+    console.log('OAuth exchange detected - processing');
     try {
       const { code, redirectUri } = body;
 
