@@ -143,14 +143,15 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
           throw new Error('No authorization code received');
         }
 
-        // Exchange code for access token using dedicated auth function
+        // Exchange code for access token using gpt function with oauth parameter
         const redirectUri = 'https://veoprompter.netlify.app/oauth-redirect';
-        const exchangeResponse = await fetch('https://veoprompter.netlify.app/.netlify/functions/auth', {
+        const exchangeResponse = await fetch('https://veoprompter.netlify.app/.netlify/functions/gpt', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
+            oauth: 'exchange',
             code: code,
             redirectUri: redirectUri
           })
