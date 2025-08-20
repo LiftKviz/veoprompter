@@ -1,6 +1,5 @@
 // Netlify Function: GPT proxy
 // Calls OpenAI Chat Completions with server-side API key and returns simplified response
-// Updated to ensure environment variables are loaded - v2
 
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
@@ -11,6 +10,12 @@ const corsHeaders = {
 };
 
 exports.handler = async (event) => {
+  console.log('Function called with:', {
+    path: event.path,
+    queryStringParameters: event.queryStringParameters,
+    httpMethod: event.httpMethod
+  });
+
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 204,
@@ -18,6 +23,14 @@ exports.handler = async (event) => {
       body: ''
     };
   }
+
+  let body;
+  try {
+    body = JSON.parse(event.body || '{}');
+  } catch (e) {
+    body = {};
+  }
+  
 
   if (event.httpMethod !== 'POST') {
     return {
@@ -37,7 +50,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { model = 'gpt-4o', systemPrompt, prompt, instruction, temperature = 0.7, maxTokens = 800, userEmail, isPremium = false } = JSON.parse(event.body || '{}');
+    const { model = 'gpt-4o', systemPrompt, prompt, instruction, temperature = 0.7, maxTokens = 800 } = body;
 
     if (!instruction || typeof instruction !== 'string') {
       return {
@@ -45,44 +58,6 @@ exports.handler = async (event) => {
         headers: corsHeaders,
         body: JSON.stringify({ error: { message: 'instruction is required' } })
       };
-    }
-
-    if (!userEmail || typeof userEmail !== 'string') {
-      return {
-        statusCode: 401,
-        headers: corsHeaders,
-        body: JSON.stringify({ error: { message: 'User authentication required' } })
-      };
-    }
-
-    // Server-side rate limiting for free users
-    if (!isPremium) {
-      const today = new Date().toISOString().split('T')[0];
-      const usageKey = `usage_${userEmail}_${today}`;
-      
-      // Simple in-memory storage for demo (in production, use Redis/Firestore)
-      global.usageStore = global.usageStore || {};
-      const currentUsage = global.usageStore[usageKey] || 0;
-      
-      if (currentUsage >= 3) {
-        return {
-          statusCode: 429,
-          headers: {
-            ...corsHeaders,
-            'X-RateLimit-Limit': '3',
-            'X-RateLimit-Remaining': '0',
-            'X-RateLimit-Reset': new Date(Date.now() + 24*60*60*1000).toISOString()
-          },
-          body: JSON.stringify({ 
-            error: { 
-              message: '🎯 Daily limit reached! You\'ve used all 3 free modifications today. Sign up for Pro to get unlimited access.' 
-            } 
-          })
-        };
-      }
-      
-      // Increment usage count
-      global.usageStore[usageKey] = currentUsage + 1;
     }
 
     const messages = [];
