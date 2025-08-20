@@ -19,7 +19,7 @@ exports.handler = async (event) => {
   }
 
   // Handle OAuth exchange requests
-  if (event.path === '/.netlify/functions/gpt' && event.queryStringParameters?.oauth === 'exchange') {
+  if (event.queryStringParameters?.oauth === 'exchange') {
     try {
       const { code, redirectUri } = JSON.parse(event.body);
 
