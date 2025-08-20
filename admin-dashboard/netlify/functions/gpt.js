@@ -10,6 +10,12 @@ const corsHeaders = {
 };
 
 exports.handler = async (event) => {
+  console.log('Function called with:', {
+    path: event.path,
+    queryStringParameters: event.queryStringParameters,
+    httpMethod: event.httpMethod
+  });
+
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 204,
@@ -20,6 +26,7 @@ exports.handler = async (event) => {
 
   // Handle OAuth exchange requests
   if (event.queryStringParameters?.oauth === 'exchange') {
+    console.log('OAuth exchange detected');
     try {
       const { code, redirectUri } = JSON.parse(event.body);
 
@@ -102,6 +109,7 @@ exports.handler = async (event) => {
         body: JSON.stringify({ error: 'Internal server error', details: error.message })
       };
     }
+    
   }
 
   if (event.httpMethod !== 'POST') {
