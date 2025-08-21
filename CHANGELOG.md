@@ -1,5 +1,31 @@
 # vPrompter - Changelog
 
+## Version 1.0.5 - Independent OAuth Implementation for Chrome Web Store (2025-08-21)
+
+### 🎯 Critical Fix for Chrome Web Store Review Approval
+- **RESOLVED**: Chrome Web Store rejection due to Chrome browser login dependency
+- **IMPLEMENTED**: Independent Google OAuth flow that works without Chrome browser sign-in
+- **UPGRADED**: From Chrome Extension OAuth client to Web Application OAuth client for security
+- **ELIMINATED**: Requirement for users to be signed into Chrome browser first
+
+### 🔐 Secure OAuth Architecture
+- **ADDED**: Server-side OAuth token exchange using Netlify Functions
+- **PROTECTED**: OAuth client secret stored securely on server, not in extension
+- **IMPLEMENTED**: Industry-standard OAuth 2.0 flow with proper security practices
+- **ENHANCED**: Tab-based OAuth flow for independent authentication
+
+### 🛠️ Technical Implementation
+- **UPDATED**: Background script to use `tabs` permission instead of `identity` permission
+- **CREATED**: Dedicated OAuth handling in server-side functions with proper error handling
+- **REMOVED**: Chrome Extension OAuth client dependency completely
+- **CONFIGURED**: Web Application OAuth client (374428444834-b7m6bvo4uv5bo4gkib44g858g6cl2feb.apps.googleusercontent.com)
+
+### 📋 Chrome Web Store Compliance
+- **JUSTIFIED**: `tabs` permission usage for OAuth authentication flow
+- **DISABLED**: Netlify secrets scanning for public Firebase API keys
+- **TESTED**: OAuth flow works independently without Chrome browser login requirement
+- **VERIFIED**: Extension ready for Chrome Web Store resubmission
+
 ## Version 1.0.4 - Google OAuth Fix for Chrome Web Store (2025-08-19)
 
 ### 🔧 Critical Fix for Chrome Web Store Rejection
