@@ -64,6 +64,19 @@ class AuthService {
         this.notifyListeners();
       }
     });
+
+    // Listen for payment status changes from background script
+    chrome.runtime.onMessage.addListener((message, _sender, _sendResponse) => {
+      if (message.type === 'PAYMENT_STATUS_CHANGED') {
+        console.log('🎉 Payment status changed broadcast received!');
+        this.loadUserState(); // Refresh user state immediately
+      }
+    });
+
+    // Add periodic ExtPay sync check (every 30 seconds for signed-in free users)
+    setInterval(() => {
+      this.syncExtPayStatus();
+    }, 30000);
   }
 
   /**
@@ -100,6 +113,37 @@ class AuthService {
       if (stored.subscription && stored.subscription.status === 'active') {
         this.userState.tier = 'paid';
         this.userState.subscription = stored.subscription;
+      } else if (this.userState.isSignedIn) {
+        // Automatically check ExtPay payment status for signed-in users
+        try {
+          const paymentStatus = await new Promise<any>((resolve) => {
+            chrome.runtime.sendMessage({ type: 'GET_PAYMENT_STATUS' }, (response) => {
+              resolve(response || { paid: false });
+            });
+          });
+          
+          if (paymentStatus.paid) {
+            console.log('🎉 ExtPay payment detected! Activating Pro features...');
+            
+            this.userState.tier = 'paid';
+            this.userState.subscription = {
+              status: 'active',
+              plan: 'pro',
+              expiresAt: paymentStatus.paidAt ? 
+                new Date(new Date(paymentStatus.paidAt).getTime() + 365 * 24 * 60 * 60 * 1000).toISOString() :
+                new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
+            };
+            
+            // Save the subscription status to local storage
+            await chrome.storage.local.set({ 
+              subscription: this.userState.subscription
+            });
+            
+            console.log('✅ Pro features activated automatically!');
+          }
+        } catch (error) {
+          console.error('Failed to check ExtPay payment status:', error);
+        }
       }
 
       this.notifyListeners();
@@ -376,6 +420,46 @@ class AuthService {
   needsUpgrade(): boolean {
     return this.userState.tier === 'free' && 
            this.userState.dailyModificationsUsed >= this.DAILY_FREE_MODIFICATIONS;
+  }
+
+  /**
+   * Check for ExtPay payment updates (called periodically)
+   */
+  private async syncExtPayStatus(): Promise<void> {
+    if (!this.userState.isSignedIn || this.userState.tier === 'paid') {
+      return; // Skip if not signed in or already paid
+    }
+
+    try {
+      const paymentStatus = await new Promise<any>((resolve) => {
+        chrome.runtime.sendMessage({ type: 'GET_PAYMENT_STATUS' }, (response) => {
+          resolve(response || { paid: false });
+        });
+      });
+      
+      if (paymentStatus.paid && this.userState.tier !== 'paid') {
+        console.log('🎉 New payment detected! Upgrading user to Pro...');
+        
+        this.userState.tier = 'paid';
+        this.userState.subscription = {
+          status: 'active',
+          plan: 'pro',
+          expiresAt: paymentStatus.paidAt ? 
+            new Date(new Date(paymentStatus.paidAt).getTime() + 365 * 24 * 60 * 60 * 1000).toISOString() :
+            new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
+        };
+        
+        // Save to storage
+        await chrome.storage.local.set({ 
+          subscription: this.userState.subscription
+        });
+        
+        this.notifyListeners();
+        console.log('✅ User automatically upgraded to Pro!');
+      }
+    } catch (error) {
+      console.error('Failed to sync ExtPay status:', error);
+    }
   }
 }
 
