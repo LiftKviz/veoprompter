@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "vPrompter",
   "version": "1.0.6",
-  "description": "Professional prompt templates for AI video generation",
+  "description": "Professional prompt templates for AI video generation with YouTube preview examples",
   "permissions": [
     "storage",
     "clipboardWrite",

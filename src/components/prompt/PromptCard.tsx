@@ -122,7 +122,22 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt, onSave, onRemove
 
   const handlePreview = () => {
     if (prompt.youtubeLink) {
-      window.open(prompt.youtubeLink, '_blank');
+      // Open centered popup window
+      const width = 1000;
+      const height = 700;
+      const left = window.screenX + (window.outerWidth - width) / 2;
+      const top = window.screenY + (window.outerHeight - height) / 2;
+      
+      const popup = window.open(
+        prompt.youtubeLink,
+        'video-preview',
+        `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,location=no,status=no,resizable=yes,scrollbars=yes`
+      );
+      
+      // Focus the popup
+      if (popup) {
+        popup.focus();
+      }
     } else {
       showToastMessage('🎬 Preview coming soon!');
     }
