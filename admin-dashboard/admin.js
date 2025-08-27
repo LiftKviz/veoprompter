@@ -3,6 +3,18 @@
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+// Add this function near the top of the file (after the Firebase imports)
+function checkAdminAccess(user) {
+  const allowedEmails = ['nemanja@leaded.pro'];
+  
+  if (!allowedEmails.includes(user.email)) {
+    alert('Access denied. Admin access only.');
+    auth.signOut();
+    return false;
+  }
+  return true;
+}
+
 // Handle redirect-based sign-in results (needed when popup is blocked or fallback used)
 auth.getRedirectResult()
   .then((result) => {
@@ -92,6 +104,11 @@ authBtn.addEventListener('click', async () => {
 auth.onAuthStateChanged((user) => {
   currentUser = user;
   if (user) {
+    // Check if user is authorized admin
+    if (!checkAdminAccess(user)) {
+      return; // Exit early if not authorized
+    }
+    
     authStatus.textContent = `Signed in as ${user.email}`;
     authBtn.textContent = 'Sign Out';
     mainContent.style.display = 'grid';
