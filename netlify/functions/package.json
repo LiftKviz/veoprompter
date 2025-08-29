@@ -1,0 +1,9 @@
+{
+  "name": "veoprompter-functions",
+  "version": "1.0.0",
+  "description": "Netlify functions for VeoPrompter",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "firebase-admin": "^11.11.0"
+  }
+}

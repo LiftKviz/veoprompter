@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "vPrompter",
-  "version": "1.0.7",
-  "description": "Professional prompt templates for AI video generation with YouTube preview examples",
+  "version": "1.0.8",
+  "description": "Professional video prompt templates with AI-powered first frame generation and YouTube preview examples",
   "permissions": [
     "storage",
     "clipboardWrite",

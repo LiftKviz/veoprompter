@@ -2,12 +2,34 @@
 // Calls Google Generative AI API for image generation with server-side API key
 
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const admin = require('firebase-admin');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
+
+// Initialize Firebase Admin only once
+let db;
+try {
+  if (!admin.apps.length) {
+    // Use environment variable for service account
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}');
+    
+    if (serviceAccount.project_id) {
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+      });
+      db = admin.firestore();
+    }
+  } else {
+    db = admin.firestore();
+  }
+} catch (error) {
+  console.error('Firebase initialization error:', error);
+  // Continue without Firebase - fallback to no rate limiting
+}
 
 exports.handler = async (event) => {
   console.log('Google AI Image function called with:', {
@@ -52,7 +74,69 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { prompt, userId } = body;
+    const { prompt, userId, action } = body;
+    
+    // Handle usage check request
+    if (action === 'checkUsage') {
+      if (!userId) {
+        return {
+          statusCode: 400,
+          headers: corsHeaders,
+          body: JSON.stringify({ error: { message: 'userId is required' } })
+        };
+      }
+      
+      if (db) {
+        try {
+          const userRef = db.collection('users').doc(userId);
+          const userDoc = await userRef.get();
+          
+          const now = new Date();
+          const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+          
+          let userData = userDoc.exists ? userDoc.data() : {};
+          let imageUsage = userData.imageUsage || {};
+          
+          // Reset if new month
+          if (imageUsage.month !== currentMonth) {
+            imageUsage = { month: currentMonth, count: 0 };
+          }
+          
+          const userTier = userData.tier || 'free';
+          const monthlyLimit = userTier === 'paid' || userData.email === 'nemanja@leaded.pro' ? 125 : 0;
+          const remaining = Math.max(0, monthlyLimit - (imageUsage.count || 0));
+          
+          return {
+            statusCode: 200,
+            headers: { 'Content-Type': 'application/json', ...corsHeaders },
+            body: JSON.stringify({ 
+              usage: { 
+                remaining: remaining,
+                limit: monthlyLimit,
+                used: imageUsage.count || 0,
+                tier: userTier
+              }
+            })
+          };
+        } catch (error) {
+          console.error('Failed to check usage:', error);
+          return {
+            statusCode: 500,
+            headers: corsHeaders,
+            body: JSON.stringify({ error: { message: 'Failed to check usage' } })
+          };
+        }
+      } else {
+        // No Firebase, return default
+        return {
+          statusCode: 200,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+          body: JSON.stringify({ 
+            usage: { remaining: 125, limit: 125, used: 0, tier: 'unknown' }
+          })
+        };
+      }
+    }
 
     if (!prompt || typeof prompt !== 'string') {
       return {
@@ -70,8 +154,55 @@ exports.handler = async (event) => {
       };
     }
 
-    // Rate limiting is handled on the frontend in imageGenerationService.ts
-    // to avoid duplicate API calls and provide immediate feedback
+    // Server-side rate limiting with Firebase
+    if (db) {
+      try {
+        const userRef = db.collection('users').doc(userId);
+        const userDoc = await userRef.get();
+        
+        const now = new Date();
+        const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        
+        let userData = userDoc.exists ? userDoc.data() : {};
+        let imageUsage = userData.imageUsage || {};
+        
+        // Reset if new month
+        if (imageUsage.month !== currentMonth) {
+          imageUsage = {
+            month: currentMonth,
+            count: 0,
+            lastGenerated: null
+          };
+        }
+        
+        // Check limit (125 per month for premium, 0 for free)
+        const userTier = userData.tier || 'free';
+        const monthlyLimit = userTier === 'paid' || userData.email === 'nemanja@leaded.pro' ? 125 : 0;
+        
+        if (imageUsage.count >= monthlyLimit) {
+          return {
+            statusCode: 429,
+            headers: corsHeaders,
+            body: JSON.stringify({ 
+              error: { 
+                message: `Monthly limit reached (${monthlyLimit} images). ${userTier === 'free' ? 'Upgrade to Premium for 125 images/month.' : 'Resets next month.'}`,
+                remaining: 0,
+                limit: monthlyLimit
+              } 
+            })
+          };
+        }
+        
+        // Will increment after successful generation
+        console.log(`User ${userId} has used ${imageUsage.count}/${monthlyLimit} generations this month`);
+        
+      } catch (error) {
+        console.error('Rate limiting check failed:', error);
+        // Continue without rate limiting on error
+      }
+    } else {
+      console.log('Firebase not configured - rate limiting disabled');
+    }
 
     // Initialize Google AI
     const genAI = new GoogleGenerativeAI(apiKey);
@@ -128,6 +259,41 @@ exports.handler = async (event) => {
 
     console.log(`Image generated successfully, size: ${imageData.length} bytes, type: ${mimeType}`);
 
+    // Increment usage count in Firebase after successful generation
+    let remaining = null;
+    if (db) {
+      try {
+        const userRef = db.collection('users').doc(userId);
+        const now = new Date();
+        const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        
+        // Get current data again to ensure accuracy
+        const userDoc = await userRef.get();
+        let userData = userDoc.exists ? userDoc.data() : {};
+        let imageUsage = userData.imageUsage || { month: currentMonth, count: 0 };
+        
+        // Increment count
+        imageUsage.count = (imageUsage.count || 0) + 1;
+        imageUsage.lastGenerated = admin.firestore.FieldValue.serverTimestamp();
+        imageUsage.month = currentMonth;
+        
+        // Update user document
+        await userRef.set({
+          imageUsage: imageUsage,
+          lastActivity: admin.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+        
+        const userTier = userData.tier || 'free';
+        const monthlyLimit = userTier === 'paid' || userData.email === 'nemanja@leaded.pro' ? 125 : 0;
+        remaining = Math.max(0, monthlyLimit - imageUsage.count);
+        
+        console.log(`Updated usage for ${userId}: ${imageUsage.count}/${monthlyLimit} (${remaining} remaining)`);
+      } catch (error) {
+        console.error('Failed to update usage count:', error);
+        // Don't fail the request if we can't update the count
+      }
+    }
+
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json', ...corsHeaders },
@@ -135,7 +301,10 @@ exports.handler = async (event) => {
         success: true,
         imageUrl: dataUrl,
         prompt: prompt,
-        mimeType: mimeType
+        mimeType: mimeType,
+        usage: {
+          remaining: remaining
+        }
       })
     };
 

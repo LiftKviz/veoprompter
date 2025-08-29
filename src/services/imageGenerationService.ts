@@ -13,6 +13,9 @@ interface ImageGenerationResponse {
   success: boolean;
   imageUrl: string;
   prompt: string;
+  usage?: {
+    remaining: number | null;
+  };
 }
 
 interface UsageData {
@@ -167,8 +170,23 @@ export class ImageGenerationService {
         throw new Error('📭 No image generated: Please try again with a different prompt');
       }
 
-      // Increment usage count on successful generation
-      await this.incrementUsage(request.userId);
+      // Update local storage with server-side remaining count if provided
+      if (data.usage?.remaining !== null && data.usage?.remaining !== undefined) {
+        const key = `imageUsage_${request.userId}`;
+        const monthlyLimit = 125;
+        const used = monthlyLimit - data.usage.remaining;
+        await chrome.storage.local.set({ 
+          [key]: { 
+            count: used, 
+            lastReset: Date.now(),
+            serverTracked: true 
+          } 
+        });
+        console.log(`Server reports ${data.usage.remaining} generations remaining`);
+      } else {
+        // Fallback to local tracking if server doesn't provide usage
+        await this.incrementUsage(request.userId);
+      }
 
       return data;
     } catch (error) {
@@ -194,6 +212,37 @@ export class ImageGenerationService {
     } catch (error) {
       console.error('Failed to get remaining generations:', error);
       return 0;
+    }
+  }
+
+  /**
+   * Get server-side usage information (more secure)
+   */
+  async getServerUsage(userId: string): Promise<{ remaining: number; limit: number }> {
+    try {
+      const response = await fetch(IMAGE_PROXY_ENDPOINT_PROD, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          action: 'checkUsage',
+          userId: userId
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.usage || { remaining: 125, limit: 125 };
+      }
+      
+      // Fallback to local storage
+      const usage = await this.getMonthlyUsage(userId);
+      return { remaining: Math.max(0, 125 - usage.count), limit: 125 };
+    } catch (error) {
+      console.error('Failed to get server usage:', error);
+      const usage = await this.getMonthlyUsage(userId);
+      return { remaining: Math.max(0, 125 - usage.count), limit: 125 };
     }
   }
 }
