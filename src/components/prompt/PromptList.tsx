@@ -147,6 +147,7 @@ export const PromptList: React.FC<PromptListProps> = ({ category, searchQuery = 
               onSave={category !== 'my-prompts' ? handleSavePrompt : undefined}
               onRemove={category === 'my-prompts' ? handleRemovePrompt : undefined}
               isSaved={category === 'my-prompts'}
+              isCustomPrompt={category === 'my-prompts'}
             />
           ))}
         </div>

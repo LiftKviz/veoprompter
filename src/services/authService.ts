@@ -80,6 +80,14 @@ class AuthService {
   }
 
   /**
+   * Check if user is admin
+   */
+  private isAdminUser(email?: string): boolean {
+    const adminEmails = ['nemanja@leaded.pro'];
+    return adminEmails.includes(email || '');
+  }
+
+  /**
    * Load user state from storage
    */
   private async loadUserState() {
@@ -91,7 +99,13 @@ class AuthService {
         this.userState.isSignedIn = true;
         this.userState.email = stored.user.email;
         this.userState.userId = stored.user.email;
-        this.userState.tier = 'free'; // Default to free tier
+        
+        // Admin users get paid tier automatically
+        if (this.isAdminUser(stored.user.email)) {
+          this.userState.tier = 'paid';
+        } else {
+          this.userState.tier = 'free'; // Default to free tier
+        }
       }
       
       // Load daily usage data
@@ -109,11 +123,11 @@ class AuthService {
         }
       }
       
-      // Check subscription status
-      if (stored.subscription && stored.subscription.status === 'active') {
+      // Check subscription status (skip for admin users who already have paid tier)
+      if (!this.isAdminUser(this.userState.email) && stored.subscription && stored.subscription.status === 'active') {
         this.userState.tier = 'paid';
         this.userState.subscription = stored.subscription;
-      } else if (this.userState.isSignedIn) {
+      } else if (this.userState.isSignedIn && !this.isAdminUser(this.userState.email)) {
         // Automatically check ExtPay payment status for signed-in users
         try {
           const paymentStatus = await new Promise<any>((resolve) => {
@@ -275,7 +289,7 @@ class AuthService {
           // Update user state with the returned user info
           this.userState = {
             isSignedIn: true,
-            tier: 'free',
+            tier: this.isAdminUser(response.user.email) ? 'paid' : 'free',
             email: response.user.email,
             userId: response.user.email, // Use email as ID for simplicity
             hasApiKey: this.userState.hasApiKey,
@@ -426,8 +440,8 @@ class AuthService {
    * Check for ExtPay payment updates (called periodically)
    */
   private async syncExtPayStatus(): Promise<void> {
-    if (!this.userState.isSignedIn || this.userState.tier === 'paid') {
-      return; // Skip if not signed in or already paid
+    if (!this.userState.isSignedIn || this.userState.tier === 'paid' || this.isAdminUser(this.userState.email)) {
+      return; // Skip if not signed in, already paid, or is admin
     }
 
     try {

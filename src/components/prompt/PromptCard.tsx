@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Prompt } from '@/types';
 import { GPTService } from '@/services/gptService';
+import { ImageGenerationService } from '@/services/imageGenerationService';
 import { Toast } from '../common/Toast';
 import { UpgradeModal } from '../common/UpgradeModal';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,9 +12,10 @@ interface PromptCardProps {
   onSave?: (prompt: Prompt) => void;
   onRemove?: (prompt: Prompt) => void;
   isSaved?: boolean;
+  isCustomPrompt?: boolean; // For showing image generation on custom prompts only
 }
 
-export const PromptCard: React.FC<PromptCardProps> = ({ prompt, onSave, onRemove, isSaved }) => {
+export const PromptCard: React.FC<PromptCardProps> = ({ prompt, onSave, onRemove, isSaved, isCustomPrompt = false }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -26,6 +28,9 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt, onSave, onRemove
   const [upgradeMessage, setUpgradeMessage] = useState('');
   const [showSequenceSelector, setShowSequenceSelector] = useState(false);
   const [availableSequences, setAvailableSequences] = useState<any[]>([]);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
+  const [showImageModal, setShowImageModal] = useState(false);
 
   const { userState, canAccess, getUpgradeMessage, signIn, trackModification, getRemainingModifications } = useAuth();
 
@@ -214,6 +219,59 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt, onSave, onRemove
     showToastMessage('Upgrade flow coming soon!');
   };
 
+  const handleGenerateFirstFrame = async () => {
+    if (!userState.isSignedIn) {
+      setUpgradeFeature('Generate First Frame');
+      setUpgradeMessage('Sign in required to generate first frame images');
+      setShowUpgradeModal(true);
+      return;
+    }
+
+    setIsGeneratingImage(true);
+    try {
+      const imageService = ImageGenerationService.getInstance();
+      
+      // Check permissions first
+      const permission = await imageService.canGenerateImage(userState.userId || '');
+      if (!permission.allowed) {
+        setUpgradeFeature('Generate First Frame');
+        setUpgradeMessage(permission.reason || 'Image generation not available');
+        setShowUpgradeModal(true);
+        return;
+      }
+
+      const result = await imageService.generateFirstFrame({
+        prompt: modifiedPrompt,
+        userId: userState.userId || ''
+      });
+
+      setGeneratedImageUrl(result.imageUrl);
+      setShowImageModal(true);
+      
+      const remaining = await imageService.getRemainingGenerations(userState.userId || '');
+      showToastMessage(`🎨 First frame generated! ${remaining} generations remaining this month.`);
+      
+    } catch (error) {
+      console.error('Failed to generate first frame:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to generate first frame';
+      showToastMessage(errorMessage);
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
+  const handleDownloadImage = () => {
+    if (!generatedImageUrl) return;
+    
+    const link = document.createElement('a');
+    link.href = generatedImageUrl;
+    link.download = `first-frame-${prompt.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToastMessage('📥 Image downloaded!');
+  };
+
   return (
     <>
       <div className="prompt-card">
@@ -303,6 +361,16 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt, onSave, onRemove
                 >
                   ▶️ Preview
                 </button>
+                {isCustomPrompt && (
+                  <button 
+                    className="action-button" 
+                    onClick={handleGenerateFirstFrame}
+                    disabled={isGeneratingImage}
+                    aria-label="Generate first frame image from prompt"
+                  >
+                    {isGeneratingImage ? '🎨 Generating...' : '🎨 First Frame'}
+                  </button>
+                )}
                 {onSave && !isSaved && (
                   <button 
                     className="action-button" 
@@ -365,6 +433,45 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt, onSave, onRemove
             >
               Cancel
             </button>
+          </div>
+        </div>
+      )}
+      
+      {showImageModal && generatedImageUrl && (
+        <div className="image-modal-overlay" onClick={() => setShowImageModal(false)}>
+          <div className="image-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="image-modal-header">
+              <h3>Generated First Frame</h3>
+              <button 
+                className="close-button" 
+                onClick={() => setShowImageModal(false)}
+                aria-label="Close image modal"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="image-modal-content">
+              <img 
+                src={generatedImageUrl} 
+                alt="Generated first frame" 
+                className="generated-image"
+              />
+              <p className="image-prompt-text">{modifiedPrompt}</p>
+            </div>
+            <div className="image-modal-actions">
+              <button 
+                className="secondary" 
+                onClick={() => setShowImageModal(false)}
+              >
+                Close
+              </button>
+              <button 
+                className="primary" 
+                onClick={handleDownloadImage}
+              >
+                📥 Download
+              </button>
+            </div>
           </div>
         </div>
       )}

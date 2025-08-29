@@ -17,6 +17,7 @@
     "deploy:admin": "npm run deploy:prepare && echo 'Admin dashboard ready - deploy admin-dashboard folder to Netlify'"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@remotion/cli": "^4.0.327",
     "clsx": "^2.1.0",
     "extpay": "^3.1.1",

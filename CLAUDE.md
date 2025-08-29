@@ -2,6 +2,13 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Important Instructions
+
+- **When the user asks a question** (e.g., "should I...", "how do I...", "what if...", "where do I..."), **ANSWER THE QUESTION FIRST** before taking any action
+- **Only perform actions when explicitly requested** (e.g., "create...", "make...", "do...", "add...", "run...")
+- If unsure whether to act or just answer, default to answering
+- Do not start working on tasks when the user is asking for advice or information
+
 ## Project Overview
 
 VeoPrompter is a Chrome extension for discovering, managing, and modifying prompts for Google Veo 3 (now Google Flow) video creation. It includes React-based popup UI, Firebase integration, payment processing, and AI-powered prompt modification.
